@@ -107,6 +107,6 @@ app.get("/createContact", (req, res, next) => {
 });
 
 //Server
-app.listen(8000, function() {
-  console.log("API listening on http://localhost:8000");
+app.listen(process.env.PORT || 8000, function() {
+  console.log("API started");
 });
