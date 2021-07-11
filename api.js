@@ -32,7 +32,7 @@ app.get("/setTest", (req, res, next) => {
 
 // EXAMPLE 2
 app.get("/getTest", (req, res, next) => {
-  rootRef.ref().child("test").get().then((snapshot) => {
+  rootRef.ref().child("users/123").get().then((snapshot) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
