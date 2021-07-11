@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "engines": {
     "node": "12.15.0",
-    "npm":  "6.13.4"
+    "npm": "6.13.4"
   },
   "description": "",
   "main": "api.js",
@@ -20,5 +20,9 @@
   "bugs": {
     "url": "https://github.com/abhavedula/Glome-APIs/issues"
   },
-  "homepage": "https://github.com/abhavedula/Glome-APIs#readme"
+  "homepage": "https://github.com/abhavedula/Glome-APIs#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "firebase": "^8.7.1"
+  }
 }
