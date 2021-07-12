@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/abhavedula/Glome-APIs#readme",
   "dependencies": {
+    "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "firebase": "^8.7.1"
   }

@@ -1,5 +1,9 @@
 const express = require("express");
 const app = express();
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }))
 
 var firebase = require('firebase')
 
@@ -22,33 +26,8 @@ app.get("/", (req, res, next) => {
   res.end('Glome APIs');
 });
 
-// EXAMPLE 1
-app.get("/setTest", (req, res, next) => {
-  rootRef.ref('test').set({
-        name: 'bob',
-        number: '123'
-    });
-});
-
-// EXAMPLE 2
-app.get("/getTest", (req, res, next) => {
-  rootRef.ref().child("users/123").get().then((snapshot) => {
-    if (snapshot.exists()) {
-      res.statusCode = 200;
-      data = snapshot.val();
-      res.send(snapshot.val());
-    } else {
-      res.statusCode = 400;
-      res.send("No data available");
-    }
-  }).catch((error) => {
-    res.statusCode = 400;
-    res.send(error);
-  });
-});
-
 app.get("/getUserProfileDetails", (req, res, next) => {
-  const userId = req.body.userId;
+  const userId = req.query.userId;
   rootRef.ref().child("users/" + userId).get().then((snapshot) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
@@ -70,14 +49,20 @@ app.get("/getUserProfileDetails", (req, res, next) => {
   });
 });
 
-app.get("/getGroups", (req, res, next) => {
-  const userId = req.body.userId;
-  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+app.get("/getContactDetails", (req, res, next) => {
+  const userId = req.query.userId;
+  const contactId = req.query.contactId;
+  rootRef.ref().child("users/" + userId + "/contacts/" + contactId).get().then((snapshot) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
       res.send({
-        groups: data["groups"],
+        id: data["id"],
+        name: data["name"],
+        email: data["email"],
+        agencyName: data["language"],
+        phone: data["phone"],
+        groups: data["groups"]
       });
     } else {
       res.statusCode = 400;
@@ -89,7 +74,41 @@ app.get("/getGroups", (req, res, next) => {
   });
 });
 
-app.get("/createContact", (req, res, next) => {
+app.get("/getContacts", (req, res, next) => {
+  const userId = req.query.userId;
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+      res.send(data["contacts"]);
+    } else {
+      res.statusCode = 400;
+      res.send("No data available");
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send(error);
+  });
+});
+
+app.get("/getGroups", (req, res, next) => {
+  const userId = req.query.userId;
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+      res.send(data["groups"]);
+    } else {
+      res.statusCode = 400;
+      res.send("No data available");
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send(error);
+  });
+});
+
+app.post("/createContact", (req, res, next) => {
   const userId = req.body.userId;
   const name = req.body.name;
   const phone = req.body.phone;
@@ -103,8 +122,42 @@ app.get("/createContact", (req, res, next) => {
         email: email,
         language: language,
         groups: null
+    }, (error) => {
+      if (error) {
+        res.statusCode = 400;
+        res.send('Data could not be saved.' + error);
+      } else {
+        res.statusCode = 200;
+        res.send('Data saved successfully.');
+      }
     });
 });
+
+// app.post("/editContact", (req, res, next) => {
+//   const userId = req.body.userId;
+//   const contactId = req.body.contactId;
+//   const newName = req.body.newName;
+//   const newPhone = req.body.newPhone;
+//   const newEmail = req.body.newEmail;
+//   const newLanguage = req.body.newLanguage;
+//   const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
+//   ref.update({
+//         id: contactId,
+//         name: newName,
+//         phone: newPhone,
+//         email: newEmail,
+//         language: newLanguage,
+//         groups: null,
+//     }, (error) => {
+//       if (error) {
+//         res.statusCode = 400;
+//         res.send('Data could not be saved.' + error);
+//       } else {
+//         res.statusCode = 200;
+//         res.send('Data saved successfully.');
+//       }
+//     });
+// });
 
 //Server
 app.listen(process.env.PORT || 8000, function() {
