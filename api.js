@@ -26,6 +26,38 @@ app.get("/", (req, res, next) => {
   res.end('Glome APIs');
 });
 
+app.post("/signIn", (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+    var query = firebase.database().ref("users");
+    query.once("value")
+      .then(function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var data = childSnapshot.val();
+
+          if (data["email"] == email) {
+            if (data["password"] == password) {
+              res.send({
+                id: data["id"],
+                name: data["name"],
+                email: data["email"],
+                agencyName: data["agencyName"],
+                phone: data["phone"]
+              });
+            } else {
+              res.statusCode = 400;
+              res.send("Incorrect password");
+            }
+          } else {
+            res.statusCode = 400;
+            res.send("Incorrect email");
+          }
+          
+      });
+    });
+});
+
 app.get("/getUserProfileDetails", (req, res, next) => {
   const userId = req.query.userId;
   rootRef.ref().child("users/" + userId).get().then((snapshot) => {
@@ -108,6 +140,24 @@ app.get("/getGroups", (req, res, next) => {
   });
 });
 
+app.get("/getGroupDetails", (req, res, next) => {
+  const userId = req.query.userId;
+  const groupId = req.query.groupId;
+  rootRef.ref().child("users/" + userId + "/groups/" + groupId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+      res.send(data);
+    } else {
+      res.statusCode = 400;
+      res.send("No data available");
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send(error);
+  });
+});
+
 app.post("/createContact", (req, res, next) => {
   const userId = req.body.userId;
   const name = req.body.name;
@@ -122,6 +172,25 @@ app.post("/createContact", (req, res, next) => {
         email: email,
         language: language,
         groups: null
+    }, (error) => {
+      if (error) {
+        res.statusCode = 400;
+        res.send('Data could not be saved.' + error);
+      } else {
+        res.statusCode = 200;
+        res.send('Data saved successfully.');
+      }
+    });
+});
+
+app.post("/createGroup", (req, res, next) => {
+  const userId = req.body.userId;
+  const name = req.body.name;
+  const pushRef = rootRef.ref("users/" + userId + "/groups").push();
+  // TODO: Also need to update user object to list group
+  pushRef.set({
+        id: pushRef.key,
+        name: name,
     }, (error) => {
       if (error) {
         res.statusCode = 400;
