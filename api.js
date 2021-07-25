@@ -158,6 +158,34 @@ app.get("/getGroupDetails", (req, res, next) => {
   });
 });
 
+app.get("/getRemainingContactsForGroups", (req, res, next) => {
+  const userId = req.query.userId;
+  const groupId = req.query.groupId;
+  rootRef.ref().child("users/" + userId + "/groups/" + groupId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+      members = Object.values(data["members"]);
+      const result = {};
+      rootRef.ref().child("users/" + userId + "/contacts").get().then((snapshot) => {
+        contacts = snapshot.val();
+        Object.keys(contacts).forEach(function(key) {
+          if (members.indexOf(key) < 0) {
+            result[key] = contacts[key];
+          }
+      });
+        res.send(result);
+      })
+    } else {
+      res.statusCode = 400;
+      res.send("No data available");
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send(error);
+  });
+});
+
 app.post("/createContact", (req, res, next) => {
   const userId = req.body.userId;
   const name = req.body.name;
@@ -191,7 +219,7 @@ app.post("/createGroup", (req, res, next) => {
   groupRef.set({
         id: groupRef.key,
         name: name,
-        members: members
+        members: members 
     }, (error) => {
       if (error) {
         res.statusCode = 400;
@@ -209,31 +237,69 @@ app.post("/createGroup", (req, res, next) => {
     });
 });
 
-// app.post("/editContact", (req, res, next) => {
-//   const userId = req.body.userId;
-//   const contactId = req.body.contactId;
-//   const newName = req.body.newName;
-//   const newPhone = req.body.newPhone;
-//   const newEmail = req.body.newEmail;
-//   const newLanguage = req.body.newLanguage;
-//   const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
-//   ref.update({
-//         id: contactId,
-//         name: newName,
-//         phone: newPhone,
-//         email: newEmail,
-//         language: newLanguage,
-//         groups: null,
-//     }, (error) => {
-//       if (error) {
-//         res.statusCode = 400;
-//         res.send('Data could not be saved.' + error);
-//       } else {
-//         res.statusCode = 200;
-//         res.send('Data saved successfully.');
-//       }
-//     });
-// });
+app.post("/updateUserProfile", (req, res, next) => {
+  const userId = req.body.userId;
+  const newName = req.body.newName;
+  const newAgencyName = req.body.newAgencyName;
+  const newEmail = req.body.newEmail;
+  const newPhone = req.body.newPhone;
+  const ref = rootRef.ref("users/" + userId);
+  const updates = {};
+  if (newName != null) {
+    updates["name"] = newName;
+  }
+  if (newPhone != null) {
+    updates["phone"] = newPhone;
+  }
+  if (newEmail != null) {
+    updates["email"] = newEmail;
+  }
+  if (newAgencyName != null) {
+    updates["agencyName"] = newAgencyName;
+  }
+  ref.update(updates, (error) => {
+      if (error) {
+        res.statusCode = 400;
+        res.send('Data could not be saved.' + error);
+      } else {
+        res.statusCode = 200;
+        res.send('Data saved successfully.');
+      }
+    });
+});
+
+app.post("/editContact", (req, res, next) => {
+  const userId = req.body.userId;
+  const contactId = req.body.contactId;
+  const newName = req.body.newName;
+  const newPhone = req.body.newPhone;
+  const newEmail = req.body.newEmail;
+  const newLanguage = req.body.newLanguage;
+  const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
+  const updates = {};
+  if (newName != null) {
+    updates["name"] = newName;
+  }
+  if (newPhone != null) {
+    updates["phone"] = newPhone;
+  }
+  if (newEmail != null) {
+    updates["email"] = newEmail;
+  }
+  if (newLanguage != null) {
+    updates["language"] = newLanguage;
+  }
+  ref.update(updates, (error) => {
+      if (error) {
+        res.statusCode = 400;
+        res.send('Data could not be saved.' + error);
+      } else {
+        res.statusCode = 200;
+        res.send('Data saved successfully.');
+      }
+    });
+});
+
 
 //Server
 app.listen(process.env.PORT || 8000, function() {
