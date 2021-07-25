@@ -186,16 +186,23 @@ app.post("/createContact", (req, res, next) => {
 app.post("/createGroup", (req, res, next) => {
   const userId = req.body.userId;
   const name = req.body.name;
-  const pushRef = rootRef.ref("users/" + userId + "/groups").push();
-  // TODO: Also need to update user object to list group
-  pushRef.set({
-        id: pushRef.key,
+  const members = req.body.members;
+  const groupRef = rootRef.ref("users/" + userId + "/groups").push();
+  groupRef.set({
+        id: groupRef.key,
         name: name,
+        members: members
     }, (error) => {
       if (error) {
         res.statusCode = 400;
         res.send('Data could not be saved.' + error);
       } else {
+        members.forEach(function (contactId, index) {
+          const pushRef = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups").push();
+          const key = pushRef.key;
+          pushRef.set(groupRef.key);
+        });
+
         res.statusCode = 200;
         res.send('Data saved successfully.');
       }
