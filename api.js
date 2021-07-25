@@ -216,10 +216,14 @@ app.post("/createGroup", (req, res, next) => {
   const name = req.body.name;
   const members = req.body.members;
   const groupRef = rootRef.ref("users/" + userId + "/groups").push();
+  const membersObj = {};
+  members.forEach(function (contactId, index) {
+    membersObj[contactId] = contactId;
+    });
   groupRef.set({
         id: groupRef.key,
         name: name,
-        members: members 
+        members: membersObj 
     }, (error) => {
       if (error) {
         res.statusCode = 400;
@@ -296,6 +300,70 @@ app.post("/editContact", (req, res, next) => {
       } else {
         res.statusCode = 200;
         res.send('Data saved successfully.');
+      }
+    });
+});
+
+app.post("/editGroupName", (req, res, next) => {
+  const userId = req.body.userId;
+  const groupId = req.body.groupId;
+  const newName = req.body.newName;
+  const ref = rootRef.ref("users/" + userId + "/groups/" + groupId);
+  ref.update({name: newName}, (error) => {
+      if (error) {
+        res.statusCode = 400;
+        res.send('Data could not be saved.' + error);
+      } else {
+        res.statusCode = 200;
+        res.send('Data saved successfully.');
+      }
+    });
+});
+
+app.post("/addToGroup", (req, res, next) => {
+  const userId = req.body.userId;
+  const groupId = req.body.groupId;
+  const contactId = req.body.contactId;
+  const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members");
+  ref.child(contactId).set(contactId, (error) => {
+      if (error) {
+        res.statusCode = 400;
+        res.send('Data could not be saved.' + error);
+      } else {
+        const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups");
+        ref2.child(groupId).set(groupId, (error) => {
+            if (error) {
+              res.statusCode = 400;
+              res.send('Data could not be saved.' + error);
+            } else {
+              res.statusCode = 200;
+              res.send('Data saved successfully.');
+            }
+          });
+      }
+    });
+});
+
+app.post("/removeFromGroup", (req, res, next) => {
+  const userId = req.body.userId;
+  const groupId = req.body.groupId;
+  const contactId = req.body.contactId;
+  const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members/" + contactId);
+  ref.remove((error) => {
+      if (error) {
+        res.statusCode = 400;
+        res.send('Data could not be saved.' + error);
+      } else {
+        const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups/" + groupId);
+        ref2.remove((error) => {
+            if (error) {
+              res.statusCode = 400;
+              res.send('Data could not be saved.' + error);
+            } else {
+              res.statusCode = 200;
+              res.send('Data saved successfully.');
+            }
+          });
       }
     });
 });
