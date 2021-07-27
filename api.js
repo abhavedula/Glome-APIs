@@ -391,11 +391,8 @@ app.post("/sendOTP", (req, res, next) => {
               pushRef.update({otp: otp}, (error) => {
               if (error) {
                 res.statusCode = 400;
-                res.send('Data could not be saved.' + error);
-              } else {
-                res.statusCode = 200;
-                res.send('Data saved successfully.');
-              }
+                res.send('OTP could not be created.' + error);
+              } 
             });
 
             // Email OTP
@@ -424,15 +421,16 @@ app.post("/sendOTP", (req, res, next) => {
                       console.log('Email sent: ' + info.response);
                     }
                   });
-
+                  res.statusCode = 200;
+                  res.send(true);
 
                 } else {
                   res.statusCode = 400;
-                  res.send("Can't send OTP");
+                  res.send("OTP was not sent");
                 }
               }).catch((error) => {
                 res.statusCode = 400;
-                res.send("Can't send OTP");
+                res.send("OTP was not sent");
               });
           } else {
             res.statusCode = 400;
@@ -462,7 +460,7 @@ app.post("/verifyOTP", (req, res, next) => {
               res.send(true);
             } else {
               res.statusCode = 400;
-              res.send(false);
+              res.send("Incorrect OTP");
             }
           } else {
             res.statusCode = 400;
@@ -489,10 +487,10 @@ app.post("/saveNewPassword", (req, res, next) => {
               pushRef.update({password: password}, (error) => {
               if (error) {
                 res.statusCode = 400;
-                res.send('Data could not be saved.' + error);
+                res.send('Password not be updated.' + error);
               } else {
                 res.statusCode = 200;
-                res.send('Data saved successfully.');
+                res.send(true);
               }
             });
           } else {
