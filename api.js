@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const bodyParser = require('body-parser');
+var nodemailer = require('nodemailer');
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -29,7 +30,7 @@ app.get("/", (req, res, next) => {
 app.post("/signIn", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-    var query = firebase.database().ref("users");
+  var query = firebase.database().ref("users");
     query.once("value")
       .then(function(snapshot) {
         snapshot.forEach(function(childSnapshot) {
@@ -38,6 +39,7 @@ app.post("/signIn", (req, res, next) => {
 
           if (data["email"] == email) {
             if (data["password"] == password) {
+              res.statusCode = 200;
               res.send({
                 id: data["id"],
                 name: data["name"],
@@ -367,6 +369,141 @@ app.post("/removeFromGroup", (req, res, next) => {
       }
     });
 });
+
+app.post("/sendOTP", (req, res, next) => {
+  const email = req.body.email;
+
+  const min = Math.ceil(100000);
+  const max = Math.floor(999999);
+  const otp = Math.floor(Math.random() * (max - min) + min)
+
+  var query = firebase.database().ref("users");
+    query.once("value")
+      .then(function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var data = childSnapshot.val();
+
+          // Get userID and save OTP
+          if (data["email"] == email) {
+            const userId = data["id"];
+            const pushRef = rootRef.ref("users/" + userId);
+              pushRef.update({otp: otp}, (error) => {
+              if (error) {
+                res.statusCode = 400;
+                res.send('Data could not be saved.' + error);
+              } else {
+                res.statusCode = 200;
+                res.send('Data saved successfully.');
+              }
+            });
+
+            // Email OTP
+              rootRef.ref().child("mail").get().then((snapshot) => {
+                if (snapshot.exists()) {
+                  password = snapshot.val();
+                  var transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                      user: 'glomeapp@gmail.com',
+                      pass: password
+                    }
+                  });
+
+                  var mailOptions = {
+                    from: 'glomeapp@gmail.com',
+                    to: email,
+                    subject: 'OTP to reset your Glome Password',
+                    text: 'Your one time password: ' + otp
+                  };
+
+                  transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                      console.log(error);
+                    } else {
+                      console.log('Email sent: ' + info.response);
+                    }
+                  });
+
+
+                } else {
+                  res.statusCode = 400;
+                  res.send("Can't send OTP");
+                }
+              }).catch((error) => {
+                res.statusCode = 400;
+                res.send("Can't send OTP");
+              });
+          } else {
+            res.statusCode = 400;
+            res.send("Incorrect email");
+          }
+          
+      });
+    });
+});
+
+
+app.post("/verifyOTP", (req, res, next) => {
+  const email = req.body.email;
+  const otp = req.body.otp;
+  var query = firebase.database().ref("users");
+    query.once("value")
+      .then(function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var data = childSnapshot.val();
+
+          // Get userID and save OTP
+          if (data["email"] == email) {
+            const correctOtp = data["otp"];
+            if (otp == correctOtp) {
+              res.statusCode = 200;
+              res.send(true);
+            } else {
+              res.statusCode = 400;
+              res.send(false);
+            }
+          } else {
+            res.statusCode = 400;
+            res.send("Incorrect email");
+          }
+          
+      });
+    });
+});
+
+app.post("/saveNewPassword", (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  var query = firebase.database().ref("users");
+    query.once("value")
+      .then(function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var data = childSnapshot.val();
+
+          if (data["email"] == email) {
+            const userId = data["id"];
+            const pushRef = rootRef.ref("users/" + userId);
+              pushRef.update({password: password}, (error) => {
+              if (error) {
+                res.statusCode = 400;
+                res.send('Data could not be saved.' + error);
+              } else {
+                res.statusCode = 200;
+                res.send('Data saved successfully.');
+              }
+            });
+          } else {
+            res.statusCode = 400;
+            res.send("Incorrect email");
+          }
+          
+      });
+    });
+});
+
 
 
 //Server
