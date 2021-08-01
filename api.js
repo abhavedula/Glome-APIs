@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -39,13 +40,15 @@ app.post("/signIn", (req, res, next) => {
 
           if (data["email"] == email) {
             if (data["password"] == password) {
+              const authToken = jwt.sign(data["id"], 'shhhhh');
               res.statusCode = 200;
               res.send({
                 id: data["id"],
                 name: data["name"],
                 email: data["email"],
                 agencyName: data["agencyName"],
-                phone: data["phone"]
+                phone: data["phone"],
+                auth_token: authToken
               });
             } else {
               res.statusCode = 400;
@@ -62,6 +65,7 @@ app.post("/signIn", (req, res, next) => {
 
 app.get("/getUserProfileDetails", (req, res, next) => {
   const userId = req.query.userId;
+  console.log(req.headers.authorization);
   rootRef.ref().child("users/" + userId).get().then((snapshot) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
