@@ -10,13 +10,13 @@ app.use(bodyParser.urlencoded({ extended: false }))
 var firebase = require('firebase')
 
 var config = {
-    apiKey: "AIzaSyCejVflI0Fdx3A2VGAApbqKTxi6ACL3I_s",
-    authDomain: "glome-2bc31.firebaseapp.com",
-    projectId: "glome-2bc31",
-    storageBucket: "glome-2bc31.appspot.com",
-    messagingSenderId: "257542518832",
-    appId: "1:257542518832:web:a44df9d9c749c68802d5f5"
-  };
+  apiKey: "AIzaSyCejVflI0Fdx3A2VGAApbqKTxi6ACL3I_s",
+  authDomain: "glome-2bc31.firebaseapp.com",
+  projectId: "glome-2bc31",
+  storageBucket: "glome-2bc31.appspot.com",
+  messagingSenderId: "257542518832",
+  appId: "1:257542518832:web:a44df9d9c749c68802d5f5"
+};
 
 firebase.initializeApp(config);
 
@@ -32,50 +32,50 @@ app.post("/signIn", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
   var query = firebase.database().ref("users");
-    query.once("value")
-      .then(function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          var key = childSnapshot.key;
-          var data = childSnapshot.val();
+  query.once("value")
+  .then(function(snapshot) {
+    snapshot.forEach(function(childSnapshot) {
+      var key = childSnapshot.key;
+      var data = childSnapshot.val();
 
-          if (data["email"] == email) {
-            if (data["password"] == password) {
-              const authToken = jwt.sign(data["id"], 'shhhhh');
-              res.statusCode = 200;
-              res.send({
-                success: true,
-                responseCode: 200,
-                message: "Sign in was successful",
-                data: {
-                  id: data["id"],
-                  name: data["name"],
-                  email: data["email"],
-                  agencyName: data["agencyName"],
-                  phone: data["phone"],
-                  auth_token: authToken
-                }
-              });
-            } else {
-              res.statusCode = 200;
-              res.send({
-                success: false,
-                responseCode: 200,
-                message: "Incorrect password",
-                data: {}
-              });
+      if (data["email"] == email) {
+        if (data["password"] == password) {
+          const authToken = jwt.sign(data["id"], 'shhhhh');
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Sign in was successful",
+            data: {
+              id: data["id"],
+              name: data["name"],
+              email: data["email"],
+              agencyName: data["agencyName"],
+              phone: data["phone"],
+              auth_token: authToken
             }
-          } else {
-            res.statusCode = 200;
-            res.send({
-                success: false,
-                responseCode: 200,
-                message: "Incorrect email",
-                data: {}
-              });
-          }
-          
-      });
+          });
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: false,
+            responseCode: 200,
+            message: "Incorrect password",
+            data: {}
+          });
+        }
+      } else {
+        res.statusCode = 200;
+        res.send({
+          success: false,
+          responseCode: 200,
+          message: "Incorrect email",
+          data: {}
+        });
+      }
+      
     });
+});
 });
 
 app.get("/getUserProfileDetails", (req, res, next) => {
@@ -108,12 +108,12 @@ app.get("/getUserProfileDetails", (req, res, next) => {
     }
   }).catch((error) => {
     res.statusCode = 400;
-      res.send({
-        success: false,
-        responseCode: 400,
-        message: error,
-        data: {}
-      });
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: error,
+      data: {}
+    });
   });
 });
 
@@ -148,12 +148,12 @@ app.get("/getContactDetails", (req, res, next) => {
     }
   }).catch((error) => {
     res.statusCode = 400;
-      res.send({
-        success: false,
-        responseCode: 400,
-        message: error,
-        data: {}
-      });
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: error,
+      data: {}
+    });
   });
 });
 
@@ -180,12 +180,12 @@ app.get("/getContacts", (req, res, next) => {
     }
   }).catch((error) => {
     res.statusCode = 400;
-      res.send({
-        success: false,
-        responseCode: 400,
-        message: error,
-        data: {}
-      });
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: error,
+      data: {}
+    });
   });
 });
 
@@ -212,12 +212,12 @@ app.get("/getGroups", (req, res, next) => {
     }
   }).catch((error) => {
     res.statusCode = 400;
-      res.send({
-        success: false,
-        responseCode: 400,
-        message: error,
-        data: {}
-      });
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: error,
+      data: {}
+    });
   });
 });
 
@@ -245,12 +245,12 @@ app.get("/getGroupDetails", (req, res, next) => {
     }
   }).catch((error) => {
     res.statusCode = 400;
-      res.send({
-        success: false,
-        responseCode: 400,
-        message: error,
-        data: {}
-      });
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: error,
+      data: {}
+    });
   });
 });
 
@@ -269,7 +269,7 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
           if (members.indexOf(key) < 0) {
             result[key] = contacts[key];
           }
-      });
+        });
         res.send({
           success: true,
           responseCode: 200,
@@ -287,12 +287,12 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
     }
   }).catch((error) => {
     res.statusCode = 400;
-      res.send({
-        success: false,
-        responseCode: 400,
-        message: error,
-        data: {}
-      });
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: error,
+      data: {}
+    });
   });
 });
 
@@ -304,31 +304,31 @@ app.post("/createContact", (req, res, next) => {
   const language = req.body.language;
   const pushRef = rootRef.ref("users/" + userId + "/contacts").push();
   pushRef.set({
-        id: pushRef.key,
-        name: name,
-        phone: phone,
-        email: email,
-        language: language,
-        groups: null
-    }, (error) => {
-      if (error) {
-        res.statusCode = 400;
-        res.send({
-          success: false,
-          responseCode: 400,
-          message: error,
-          data: {}
-        });
-      } else {
-        res.statusCode = 200;
-        res.send({
-          success: true,
-          responseCode: 200,
-          message: 'Contact created successfully',
-          data: {}
-        });
-      }
-    });
+    id: pushRef.key,
+    name: name,
+    phone: phone,
+    email: email,
+    language: language,
+    groups: null
+  }, (error) => {
+    if (error) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: 'Contact created successfully',
+        data: {}
+      });
+    }
+  });
 });
 
 app.post("/createGroup", (req, res, next) => {
@@ -339,36 +339,36 @@ app.post("/createGroup", (req, res, next) => {
   const membersObj = {};
   members.forEach(function (contactId, index) {
     membersObj[contactId] = contactId;
-    });
+  });
   groupRef.set({
-        id: groupRef.key,
-        name: name,
-        members: membersObj 
-    }, (error) => {
-      if (error) {
-        res.statusCode = 400;
-        res.send({
-          success: false,
-          responseCode: 400,
-          message: error,
-          data: {}
-        });
-      } else {
-        members.forEach(function (contactId, index) {
-          const pushRef = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups").push();
-          const key = pushRef.key;
-          pushRef.set(groupRef.key);
-        });
+    id: groupRef.key,
+    name: name,
+    members: membersObj 
+  }, (error) => {
+    if (error) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
+    } else {
+      members.forEach(function (contactId, index) {
+        const pushRef = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups").push();
+        const key = pushRef.key;
+        pushRef.set(groupRef.key);
+      });
 
-        res.statusCode = 200;
-        res.send({
-          success: true,
-          responseCode: 200,
-          message: 'Group created successfully',
-          data: {}
-        });
-      }
-    });
+      res.statusCode = 200;
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: 'Group created successfully',
+        data: {}
+      });
+    }
+  });
 });
 
 app.post("/updateUserProfile", (req, res, next) => {
@@ -392,24 +392,24 @@ app.post("/updateUserProfile", (req, res, next) => {
     updates["agencyName"] = newAgencyName;
   }
   ref.update(updates, (error) => {
-      if (error) {
-        res.statusCode = 400;
-        res.send({
-          success: false,
-          responseCode: 400,
-          message: error,
-          data: {}
-        });
-      } else {
-        res.statusCode = 200;
-        res.send({
-          success: true,
-          responseCode: 200,
-          message: 'User profile updated successfully',
-          data: {}
-        });
-      }
-    });
+    if (error) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: 'User profile updated successfully',
+        data: {}
+      });
+    }
+  });
 });
 
 app.post("/editContact", (req, res, next) => {
@@ -434,24 +434,24 @@ app.post("/editContact", (req, res, next) => {
     updates["language"] = newLanguage;
   }
   ref.update(updates, (error) => {
-      if (error) {
-        res.statusCode = 400;
-        res.send({
-          success: false,
-          responseCode: 400,
-          message: error,
-          data: {}
-        });
-      } else {
-        res.statusCode = 200;
-        res.send({
-          success: true,
-          responseCode: 200,
-          message: 'Contact updated successfully',
-          data: {}
-        });
-      }
-    });
+    if (error) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: 'Contact updated successfully',
+        data: {}
+      });
+    }
+  });
 });
 
 app.post("/editGroupName", (req, res, next) => {
@@ -460,24 +460,24 @@ app.post("/editGroupName", (req, res, next) => {
   const newName = req.body.newName;
   const ref = rootRef.ref("users/" + userId + "/groups/" + groupId);
   ref.update({name: newName}, (error) => {
-      if (error) {
-        res.statusCode = 400;
-        res.send({
-          success: false,
-          responseCode: 400,
-          message: error,
-          data: {}
-        });
-      } else {
-        res.statusCode = 200;
-        res.send({
-          success: true,
-          responseCode: 200,
-          message: 'Group updated successfully',
-          data: {}
-        });
-      }
-    });
+    if (error) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: 'Group updated successfully',
+        data: {}
+      });
+    }
+  });
 });
 
 app.post("/addToGroup", (req, res, next) => {
@@ -486,32 +486,32 @@ app.post("/addToGroup", (req, res, next) => {
   const contactId = req.body.contactId;
   const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members");
   ref.child(contactId).set(contactId, (error) => {
-      if (error) {
-        res.statusCode = 400;
-        res.send('Data could not be saved.' + error);
-      } else {
-        const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups");
-        ref2.child(groupId).set(groupId, (error) => {
-            if (error) {
-               res.statusCode = 400;
-                res.send({
-                  success: false,
-                  responseCode: 400,
-                  message: error,
-                  data: {}
-                });
-            } else {
-               res.statusCode = 200;
-                res.send({
-                  success: true,
-                  responseCode: 200,
-                  message: 'Added to group successfully',
-                  data: {}
-                });
-            }
-          });
-      }
-    });
+    if (error) {
+      res.statusCode = 400;
+      res.send('Data could not be saved.' + error);
+    } else {
+      const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups");
+      ref2.child(groupId).set(groupId, (error) => {
+        if (error) {
+         res.statusCode = 400;
+         res.send({
+          success: false,
+          responseCode: 400,
+          message: error,
+          data: {}
+        });
+       } else {
+         res.statusCode = 200;
+         res.send({
+          success: true,
+          responseCode: 200,
+          message: 'Added to group successfully',
+          data: {}
+        });
+       }
+     });
+    }
+  });
 });
 
 app.post("/removeFromGroup", (req, res, next) => {
@@ -520,32 +520,32 @@ app.post("/removeFromGroup", (req, res, next) => {
   const contactId = req.body.contactId;
   const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members/" + contactId);
   ref.remove((error) => {
-      if (error) {
-        res.statusCode = 400;
-        res.send('Data could not be saved.' + error);
-      } else {
-        const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups/" + groupId);
-        ref2.remove((error) => {
-            if (error) {
-              res.statusCode = 400;
-                res.send({
-                  success: false,
-                  responseCode: 400,
-                  message: error,
-                  data: {}
-                });
-            } else {
-              res.statusCode = 200;
-                res.send({
-                  success: true,
-                  responseCode: 200,
-                  message: 'Removed from group successfully',
-                  data: {}
-                });
-            }
+    if (error) {
+      res.statusCode = 400;
+      res.send('Data could not be saved.' + error);
+    } else {
+      const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups/" + groupId);
+      ref2.remove((error) => {
+        if (error) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: error,
+            data: {}
           });
-      }
-    });
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: 'Removed from group successfully',
+            data: {}
+          });
+        }
+      });
+    }
+  });
 });
 
 app.post("/sendOTP", (req, res, next) => {
@@ -556,17 +556,17 @@ app.post("/sendOTP", (req, res, next) => {
   const otp = Math.floor(Math.random() * (max - min) + min)
 
   var query = firebase.database().ref("users");
-    query.once("value")
-      .then(function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          var key = childSnapshot.key;
-          var data = childSnapshot.val();
+  query.once("value")
+  .then(function(snapshot) {
+    snapshot.forEach(function(childSnapshot) {
+      var key = childSnapshot.key;
+      var data = childSnapshot.val();
 
           // Get userID and save OTP
           if (data["email"] == email) {
             const userId = data["id"];
             const pushRef = rootRef.ref("users/" + userId);
-              pushRef.update({otp: otp}, (error) => {
+            pushRef.update({otp: otp}, (error) => {
               if (error) {
                 res.statusCode = 400;
                 res.send({
@@ -579,69 +579,69 @@ app.post("/sendOTP", (req, res, next) => {
             });
 
             // Email OTP
-              rootRef.ref().child("mail").get().then((snapshot) => {
-                if (snapshot.exists()) {
-                  password = snapshot.val();
-                  var transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                      user: 'glomeapp@gmail.com',
-                      pass: password
-                    }
-                  });
+            rootRef.ref().child("mail").get().then((snapshot) => {
+              if (snapshot.exists()) {
+                password = snapshot.val();
+                var transporter = nodemailer.createTransport({
+                  service: 'gmail',
+                  auth: {
+                    user: 'glomeapp@gmail.com',
+                    pass: password
+                  }
+                });
 
-                  var mailOptions = {
-                    from: 'glomeapp@gmail.com',
-                    to: email,
-                    subject: 'OTP to reset your Glome Password',
-                    text: 'Your one time password: ' + otp
-                  };
+                var mailOptions = {
+                  from: 'glomeapp@gmail.com',
+                  to: email,
+                  subject: 'OTP to reset your Glome Password',
+                  text: 'Your one time password: ' + otp
+                };
 
-                  transporter.sendMail(mailOptions, function(error, info){
-                    if (error) {
-                      console.log(error);
-                    } else {
-                      console.log('Email sent: ' + info.response);
-                    }
-                  });
-                  res.statusCode = 200;
-                  res.send({
-                    success: true,
-                    responseCode: 200,
-                    message: 'OTP sent successfully',
-                    data: {}
-                  });
+                transporter.sendMail(mailOptions, function(error, info){
+                  if (error) {
+                    console.log(error);
+                  } else {
+                    console.log('Email sent: ' + info.response);
+                  }
+                });
+                res.statusCode = 200;
+                res.send({
+                  success: true,
+                  responseCode: 200,
+                  message: 'OTP sent successfully',
+                  data: {}
+                });
 
-                } else {
-                  res.statusCode = 400;
-                  res.send({
-                    success: false,
-                    responseCode: 400,
-                    message: "OTP was not sent",
-                    data: {}
-                  });
-                }
-              }).catch((error) => {
+              } else {
                 res.statusCode = 400;
-                  res.send({
-                    success: false,
-                    responseCode: 400,
-                    message: "OTP was not sent: " + error,
-                    data: {}
-                  });
+                res.send({
+                  success: false,
+                  responseCode: 400,
+                  message: "OTP was not sent",
+                  data: {}
+                });
+              }
+            }).catch((error) => {
+              res.statusCode = 400;
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "OTP was not sent: " + error,
+                data: {}
               });
+            });
           } else {
             res.statusCode = 400;
-                  res.send({
-                    success: false,
-                    responseCode: 400,
-                    message: "Incorrect email",
-                    data: {}
-                  });
+            res.send({
+              success: false,
+              responseCode: 400,
+              message: "Incorrect email",
+              data: {}
+            });
           }
           
-      });
-    });
+        });
+});
 });
 
 
@@ -649,90 +649,90 @@ app.post("/verifyOTP", (req, res, next) => {
   const email = req.body.email;
   const otp = req.body.otp;
   var query = firebase.database().ref("users");
-    query.once("value")
-      .then(function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          var key = childSnapshot.key;
-          var data = childSnapshot.val();
+  query.once("value")
+  .then(function(snapshot) {
+    snapshot.forEach(function(childSnapshot) {
+      var key = childSnapshot.key;
+      var data = childSnapshot.val();
 
           // Get userID and save OTP
           if (data["email"] == email) {
             const correctOtp = data["otp"];
             if (otp == correctOtp) {
-               res.statusCode = 200;
-                  res.send({
-                    success: true,
-                    responseCode: 200,
-                    message: 'OTP verified successfully',
-                    data: {}
-                  });
-            } else {
-               res.statusCode = 200;
-                  res.send({
-                    success: false,
-                    responseCode: 200,
-                    message: "Incorrect OTP",
-                    data: {}
-                  });
-            }
-          } else {
-            res.statusCode = 200;
-                  res.send({
-                    success: false,
-                    responseCode: 200,
-                    message: "Incorrect email",
-                    data: {}
-                  });
-          }
-          
+             res.statusCode = 200;
+             res.send({
+              success: true,
+              responseCode: 200,
+              message: 'OTP verified successfully',
+              data: {}
+            });
+           } else {
+             res.statusCode = 200;
+             res.send({
+              success: false,
+              responseCode: 200,
+              message: "Incorrect OTP",
+              data: {}
+            });
+           }
+         } else {
+          res.statusCode = 200;
+          res.send({
+            success: false,
+            responseCode: 200,
+            message: "Incorrect email",
+            data: {}
+          });
+        }
+        
       });
-    });
+  });
 });
 
 app.post("/saveNewPassword", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
   var query = firebase.database().ref("users");
-    query.once("value")
-      .then(function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          var key = childSnapshot.key;
-          var data = childSnapshot.val();
+  query.once("value")
+  .then(function(snapshot) {
+    snapshot.forEach(function(childSnapshot) {
+      var key = childSnapshot.key;
+      var data = childSnapshot.val();
 
-          if (data["email"] == email) {
-            const userId = data["id"];
-            const pushRef = rootRef.ref("users/" + userId);
-              pushRef.update({password: password}, (error) => {
-              if (error) {
-                res.statusCode = 400;
-                  res.send({
-                    success: false,
-                    responseCode: 400,
-                    message: "Password not updated: " + error,
-                    data: {}
-                  });
-              } else {
-                 res.statusCode = 200;
-                  res.send({
-                    success: true,
-                    responseCode: 200,
-                    message: 'Password updated successfully',
-                    data: {}
-                  });
-              }
+      if (data["email"] == email) {
+        const userId = data["id"];
+        const pushRef = rootRef.ref("users/" + userId);
+        pushRef.update({password: password}, (error) => {
+          if (error) {
+            res.statusCode = 400;
+            res.send({
+              success: false,
+              responseCode: 400,
+              message: "Password not updated: " + error,
+              data: {}
             });
           } else {
-            res.statusCode = 200;
-                  res.send({
-                    success: false,
-                    responseCode: 200,
-                    message: "Incorrect email",
-                    data: {}
-                  });
-          }
-          
-      });
+           res.statusCode = 200;
+           res.send({
+            success: true,
+            responseCode: 200,
+            message: 'Password updated successfully',
+            data: {}
+          });
+         }
+       });
+      } else {
+        res.statusCode = 200;
+        res.send({
+          success: false,
+          responseCode: 200,
+          message: "Incorrect email",
+          data: {}
+        });
+      }
+      
     });
+  });
 });
 
 
