@@ -43,20 +43,35 @@ app.post("/signIn", (req, res, next) => {
               const authToken = jwt.sign(data["id"], 'shhhhh');
               res.statusCode = 200;
               res.send({
-                id: data["id"],
-                name: data["name"],
-                email: data["email"],
-                agencyName: data["agencyName"],
-                phone: data["phone"],
-                auth_token: authToken
+                success: true,
+                responseCode: 200,
+                message: "Sign in was successful",
+                data: {
+                  id: data["id"],
+                  name: data["name"],
+                  email: data["email"],
+                  agencyName: data["agencyName"],
+                  phone: data["phone"],
+                  auth_token: authToken
+                }
               });
             } else {
-              res.statusCode = 400;
-              res.send("Incorrect password");
+              res.statusCode = 200;
+              res.send({
+                success: false,
+                responseCode: 200,
+                message: "Incorrect password",
+                data: {}
+              });
             }
           } else {
-            res.statusCode = 400;
-            res.send("Incorrect email");
+            res.statusCode = 200;
+            res.send({
+                success: false,
+                responseCode: 200,
+                message: "Incorrect email",
+                data: {}
+              });
           }
           
       });
@@ -71,19 +86,34 @@ app.get("/getUserProfileDetails", (req, res, next) => {
       res.statusCode = 200;
       data = snapshot.val();
       res.send({
-        id: data["id"],
-        name: data["name"],
-        email: data["email"],
-        agencyName: data["agencyName"],
-        phone: data["phone"]
+        success: true,
+        responseCode: 200,
+        message: "Profile details found successfully",
+        data: {
+          id: data["id"],
+          name: data["name"],
+          email: data["email"],
+          agencyName: data["agencyName"],
+          phone: data["phone"]
+        }
       });
     } else {
-      res.statusCode = 400;
-      res.send("No data available");
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "No data available",
+        data: {}
+      });
     }
   }).catch((error) => {
     res.statusCode = 400;
-    res.send(error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
   });
 });
 
@@ -95,20 +125,35 @@ app.get("/getContactDetails", (req, res, next) => {
       res.statusCode = 200;
       data = snapshot.val();
       res.send({
-        id: data["id"],
-        name: data["name"],
-        email: data["email"],
-        agencyName: data["language"],
-        phone: data["phone"],
-        groups: data["groups"]
+        success: true,
+        responseCode: 200,
+        message: "Contact details found successfully",
+        data: {
+          id: data["id"],
+          name: data["name"],
+          email: data["email"],
+          language: data["language"],
+          phone: data["phone"],
+          groups: data["groups"]
+        }
       });
     } else {
-      res.statusCode = 400;
-      res.send("No data available");
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "No data available",
+        data: {}
+      });
     }
   }).catch((error) => {
     res.statusCode = 400;
-    res.send(error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
   });
 });
 
@@ -118,14 +163,29 @@ app.get("/getContacts", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      res.send(data["contacts"]);
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: "Contacts found successfully",
+        data: data["contacts"]
+      });
     } else {
-      res.statusCode = 400;
-      res.send("No data available");
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "No data available",
+        data: {}
+      });
     }
   }).catch((error) => {
     res.statusCode = 400;
-    res.send(error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
   });
 });
 
@@ -135,14 +195,29 @@ app.get("/getGroups", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      res.send(data["groups"]);
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: "Groups found successfully",
+        data: data["groups"]
+      });
     } else {
-      res.statusCode = 400;
-      res.send("No data available");
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "No data available",
+        data: {}
+      });
     }
   }).catch((error) => {
     res.statusCode = 400;
-    res.send(error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
   });
 });
 
@@ -153,14 +228,29 @@ app.get("/getGroupDetails", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      res.send(data);
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: "Group details found successfully",
+        data: data
+      });
     } else {
-      res.statusCode = 400;
-      res.send("No data available");
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "No data available",
+        data: {}
+      });
     }
   }).catch((error) => {
     res.statusCode = 400;
-    res.send(error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
   });
 });
 
@@ -180,15 +270,29 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
             result[key] = contacts[key];
           }
       });
-        res.send(result);
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: "Remaining contacts found successfully",
+          data: result
+        });
       })
     } else {
-      res.statusCode = 400;
-      res.send("No data available");
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "No data available",
+        data: {}
+      });
     }
   }).catch((error) => {
     res.statusCode = 400;
-    res.send(error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
   });
 });
 
@@ -209,10 +313,20 @@ app.post("/createContact", (req, res, next) => {
     }, (error) => {
       if (error) {
         res.statusCode = 400;
-        res.send('Data could not be saved.' + error);
+        res.send({
+          success: false,
+          responseCode: 400,
+          message: error,
+          data: {}
+        });
       } else {
         res.statusCode = 200;
-        res.send('Data saved successfully.');
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: 'Contact created successfully',
+          data: {}
+        });
       }
     });
 });
@@ -233,7 +347,12 @@ app.post("/createGroup", (req, res, next) => {
     }, (error) => {
       if (error) {
         res.statusCode = 400;
-        res.send('Data could not be saved.' + error);
+        res.send({
+          success: false,
+          responseCode: 400,
+          message: error,
+          data: {}
+        });
       } else {
         members.forEach(function (contactId, index) {
           const pushRef = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups").push();
@@ -242,7 +361,12 @@ app.post("/createGroup", (req, res, next) => {
         });
 
         res.statusCode = 200;
-        res.send('Data saved successfully.');
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: 'Group created successfully',
+          data: {}
+        });
       }
     });
 });
@@ -270,10 +394,20 @@ app.post("/updateUserProfile", (req, res, next) => {
   ref.update(updates, (error) => {
       if (error) {
         res.statusCode = 400;
-        res.send('Data could not be saved.' + error);
+        res.send({
+          success: false,
+          responseCode: 400,
+          message: error,
+          data: {}
+        });
       } else {
         res.statusCode = 200;
-        res.send('Data saved successfully.');
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: 'User profile updated successfully',
+          data: {}
+        });
       }
     });
 });
@@ -302,10 +436,20 @@ app.post("/editContact", (req, res, next) => {
   ref.update(updates, (error) => {
       if (error) {
         res.statusCode = 400;
-        res.send('Data could not be saved.' + error);
+        res.send({
+          success: false,
+          responseCode: 400,
+          message: error,
+          data: {}
+        });
       } else {
         res.statusCode = 200;
-        res.send('Data saved successfully.');
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: 'Contact updated successfully',
+          data: {}
+        });
       }
     });
 });
@@ -318,10 +462,20 @@ app.post("/editGroupName", (req, res, next) => {
   ref.update({name: newName}, (error) => {
       if (error) {
         res.statusCode = 400;
-        res.send('Data could not be saved.' + error);
+        res.send({
+          success: false,
+          responseCode: 400,
+          message: error,
+          data: {}
+        });
       } else {
         res.statusCode = 200;
-        res.send('Data saved successfully.');
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: 'Group updated successfully',
+          data: {}
+        });
       }
     });
 });
@@ -339,11 +493,21 @@ app.post("/addToGroup", (req, res, next) => {
         const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups");
         ref2.child(groupId).set(groupId, (error) => {
             if (error) {
-              res.statusCode = 400;
-              res.send('Data could not be saved.' + error);
+               res.statusCode = 400;
+                res.send({
+                  success: false,
+                  responseCode: 400,
+                  message: error,
+                  data: {}
+                });
             } else {
-              res.statusCode = 200;
-              res.send('Data saved successfully.');
+               res.statusCode = 200;
+                res.send({
+                  success: true,
+                  responseCode: 200,
+                  message: 'Added to group successfully',
+                  data: {}
+                });
             }
           });
       }
@@ -364,10 +528,20 @@ app.post("/removeFromGroup", (req, res, next) => {
         ref2.remove((error) => {
             if (error) {
               res.statusCode = 400;
-              res.send('Data could not be saved.' + error);
+                res.send({
+                  success: false,
+                  responseCode: 400,
+                  message: error,
+                  data: {}
+                });
             } else {
               res.statusCode = 200;
-              res.send('Data saved successfully.');
+                res.send({
+                  success: true,
+                  responseCode: 200,
+                  message: 'Removed from group successfully',
+                  data: {}
+                });
             }
           });
       }
@@ -395,7 +569,12 @@ app.post("/sendOTP", (req, res, next) => {
               pushRef.update({otp: otp}, (error) => {
               if (error) {
                 res.statusCode = 400;
-                res.send('OTP could not be created.' + error);
+                res.send({
+                  success: false,
+                  responseCode: 400,
+                  message: "OTP could not be created: " + error,
+                  data: {}
+                });
               } 
             });
 
@@ -426,19 +605,39 @@ app.post("/sendOTP", (req, res, next) => {
                     }
                   });
                   res.statusCode = 200;
-                  res.send(true);
+                  res.send({
+                    success: true,
+                    responseCode: 200,
+                    message: 'OTP sent successfully',
+                    data: {}
+                  });
 
                 } else {
                   res.statusCode = 400;
-                  res.send("OTP was not sent");
+                  res.send({
+                    success: false,
+                    responseCode: 400,
+                    message: "OTP was not sent",
+                    data: {}
+                  });
                 }
               }).catch((error) => {
                 res.statusCode = 400;
-                res.send("OTP was not sent");
+                  res.send({
+                    success: false,
+                    responseCode: 400,
+                    message: "OTP was not sent: " + error,
+                    data: {}
+                  });
               });
           } else {
             res.statusCode = 400;
-            res.send("Incorrect email");
+                  res.send({
+                    success: false,
+                    responseCode: 400,
+                    message: "Incorrect email",
+                    data: {}
+                  });
           }
           
       });
@@ -460,15 +659,30 @@ app.post("/verifyOTP", (req, res, next) => {
           if (data["email"] == email) {
             const correctOtp = data["otp"];
             if (otp == correctOtp) {
-              res.statusCode = 200;
-              res.send(true);
+               res.statusCode = 200;
+                  res.send({
+                    success: true,
+                    responseCode: 200,
+                    message: 'OTP verified successfully',
+                    data: {}
+                  });
             } else {
-              res.statusCode = 400;
-              res.send("Incorrect OTP");
+               res.statusCode = 200;
+                  res.send({
+                    success: false,
+                    responseCode: 200,
+                    message: "Incorrect OTP",
+                    data: {}
+                  });
             }
           } else {
-            res.statusCode = 400;
-            res.send("Incorrect email");
+            res.statusCode = 200;
+                  res.send({
+                    success: false,
+                    responseCode: 200,
+                    message: "Incorrect email",
+                    data: {}
+                  });
           }
           
       });
@@ -491,15 +705,30 @@ app.post("/saveNewPassword", (req, res, next) => {
               pushRef.update({password: password}, (error) => {
               if (error) {
                 res.statusCode = 400;
-                res.send('Password not be updated.' + error);
+                  res.send({
+                    success: false,
+                    responseCode: 400,
+                    message: "Password not updated: " + error,
+                    data: {}
+                  });
               } else {
-                res.statusCode = 200;
-                res.send(true);
+                 res.statusCode = 200;
+                  res.send({
+                    success: true,
+                    responseCode: 200,
+                    message: 'Password updated successfully',
+                    data: {}
+                  });
               }
             });
           } else {
-            res.statusCode = 400;
-            res.send("Incorrect email");
+            res.statusCode = 200;
+                  res.send({
+                    success: false,
+                    responseCode: 200,
+                    message: "Incorrect email",
+                    data: {}
+                  });
           }
           
       });
