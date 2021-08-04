@@ -33,70 +33,94 @@ app.post("/signIn", (req, res, next) => {
   const password = req.body.password;
   var query = firebase.database().ref("users");
   query.once("value")
-  .then(function(snapshot) {
-    snapshot.forEach(function(childSnapshot) {
-      var key = childSnapshot.key;
-      var data = childSnapshot.val();
+    .then(function(snapshot) {
+      snapshot.forEach(function(childSnapshot) {
+        var key = childSnapshot.key;
+        var data = childSnapshot.val();
 
-      if (data["email"] == email) {
-        if (data["password"] == password) {
-          const authToken = jwt.sign(data["id"], 'shhhhh');
-          res.statusCode = 200;
-          res.send({
-            success: true,
-            responseCode: 200,
-            message: "Sign in was successful",
-            data: {
-              id: data["id"],
-              name: data["name"],
-              email: data["email"],
-              agencyName: data["agencyName"],
-              phone: data["phone"],
-              auth_token: authToken
-            }
-          });
+        if (data["email"] == email) {
+          if (data["password"] == password) {
+            const authToken = jwt.sign(data["id"], 'shhhhh');
+
+            const pushRef = rootRef.ref("users/" + data["id"]);
+            pushRef.update({authToken: authToken}, (error) => {
+              if (error) {
+                res.statusCode = 400;
+                res.send({
+                  success: false,
+                  responseCode: 400,
+                  message: "Auth token could not be created: " + error,
+                  data: {}
+                });
+              }
+            }); 
+
+            res.statusCode = 200;
+            res.send({
+              success: true,
+              responseCode: 200,
+              message: "Sign in was successful",
+              data: {
+                id: data["id"],
+                name: data["name"],
+                email: data["email"],
+                agencyName: data["agencyName"],
+                phone: data["phone"],
+                auth_token: authToken
+              }
+            });
+          } else {
+            res.statusCode = 200;
+            res.send({
+              success: false,
+              responseCode: 200,
+              message: "Incorrect password",
+              data: {}
+            });
+          }
         } else {
           res.statusCode = 200;
           res.send({
             success: false,
             responseCode: 200,
-            message: "Incorrect password",
+            message: "Incorrect email",
             data: {}
           });
         }
-      } else {
-        res.statusCode = 200;
-        res.send({
-          success: false,
-          responseCode: 200,
-          message: "Incorrect email",
-          data: {}
-        });
-      }
-      
-    });
-});
+
+      });
+  });
 });
 
 app.get("/getUserProfileDetails", (req, res, next) => {
   const userId = req.query.userId;
-  console.log(req.headers.authorization);
+  const authToken = req.headers.authorization.replace("Bearer ", "");;
   rootRef.ref().child("users/" + userId).get().then((snapshot) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: "Profile details found successfully",
-        data: {
-          id: data["id"],
-          name: data["name"],
-          email: data["email"],
-          agencyName: data["agencyName"],
-          phone: data["phone"]
-        }
-      });
+      if (data["authToken"] == authToken) {
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: "Profile details found successfully",
+          data: {
+            id: data["id"],
+            name: data["name"],
+            email: data["email"],
+            agencyName: data["agencyName"],
+            phone: data["phone"]
+          }
+        });
+      } else {
+        res.statusCode = 400;
+        res.send({
+          success: false,
+          responseCode: 400,
+          message: "No authorization",
+          data: {}
+        });
+      }
     } else {
       res.statusCode = 200;
       res.send({
@@ -684,7 +708,7 @@ app.post("/verifyOTP", (req, res, next) => {
             data: {}
           });
         }
-        
+
       });
   });
 });
@@ -730,7 +754,7 @@ app.post("/saveNewPassword", (req, res, next) => {
           data: {}
         });
       }
-      
+
     });
   });
 });
