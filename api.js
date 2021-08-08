@@ -78,15 +78,7 @@ app.post("/signIn", (req, res, next) => {
               data: {}
             });
           }
-        } else {
-          res.statusCode = 200;
-          res.send({
-            success: false,
-            responseCode: 200,
-            message: "Incorrect email",
-            data: {}
-          });
-        }
+        } 
 
       });
   });
@@ -317,6 +309,42 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
       message: error,
       data: {}
     });
+  });
+});
+
+app.post("/createUserProfile", (req, res, next) => {
+  const name = req.body.name;
+  const phone = req.body.phone;
+  const email = req.body.email;
+  const agencyName = req.body.agencyName;
+  const password = req.body.password;
+  const pushRef = rootRef.ref("users/").push();
+  pushRef.set({
+    id: pushRef.key,
+    name: name,
+    phone: phone,
+    email: email,
+    agencyName: agencyName,
+    password: password,
+    contacts: null
+  }, (error) => {
+    if (error) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: error,
+        data: {}
+      });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: 'User created successfully',
+        data: {}
+      });
+    }
   });
 });
 
