@@ -98,7 +98,8 @@ app.get("/getUserProfileDetails", (req, res, next) => {
           message: "Profile details found successfully",
           data: {
             id: data["id"],
-            name: data["name"],
+            firstName: data["firstName"],
+            lastName: data["lastName"],
             email: data["email"],
             agencyName: data["agencyName"],
             phone: data["phone"]
@@ -140,17 +141,22 @@ app.get("/getContactDetails", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
+      groups = [];
+      if (data["groups"] != null)  {
+        groups = Object.values(data["groups"]);
+      }
       res.send({
         success: true,
         responseCode: 200,
         message: "Contact details found successfully",
         data: {
           id: data["id"],
-          name: data["name"],
+          firstName: data["firstName"],
+          lastName: data["lastName"],
           email: data["email"],
           language: data["language"],
           phone: data["phone"],
-          groups: data["groups"]
+          groups: groups
         }
       });
     } else {
@@ -179,11 +185,18 @@ app.get("/getContacts", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
+      contacts = Object.values(data["contacts"]);
+      for (var i = 0; i < contacts.length; i++) {
+        if (contacts[i]["groups"] != null) {
+          contacts[i]["groups"] = Object.values(contacts[i]["groups"]);
+        }
+      }
+
       res.send({
         success: true,
         responseCode: 200,
         message: "Contacts found successfully",
-        data: data["contacts"]
+        data: contacts
       });
     } else {
       res.statusCode = 200;
@@ -211,11 +224,16 @@ app.get("/getGroups", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
+      groups = Object.values(data["groups"]);
+      for (var i = 0; i < groups.length; i++) {
+        groups[i]["members"] = Object.values(groups[i]["members"]);
+
+      }
       res.send({
         success: true,
         responseCode: 200,
         message: "Groups found successfully",
-        data: data["groups"]
+        data: groups
       });
     } else {
       res.statusCode = 200;
@@ -244,6 +262,7 @@ app.get("/getGroupDetails", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
+      data["members"] = Object.values(data["members"]);
       res.send({
         success: true,
         responseCode: 200,
@@ -290,7 +309,7 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
           success: true,
           responseCode: 200,
           message: "Remaining contacts found successfully",
-          data: result
+          data: Object.values(result)
         });
       })
     } else {
@@ -313,7 +332,8 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
 });
 
 app.post("/createUserProfile", (req, res, next) => {
-  const name = req.body.name;
+  const firstName = req.body.firstName;
+  const lastName =  req.body.lastName;
   const phone = req.body.phone;
   const email = req.body.email;
   const agencyName = req.body.agencyName;
@@ -321,7 +341,8 @@ app.post("/createUserProfile", (req, res, next) => {
   const pushRef = rootRef.ref("users/").push();
   pushRef.set({
     id: pushRef.key,
-    name: name,
+    firstName: firstName,
+    lastName: lastName,
     phone: phone,
     email: email,
     agencyName: agencyName,
@@ -350,18 +371,22 @@ app.post("/createUserProfile", (req, res, next) => {
 
 app.post("/createContact", (req, res, next) => {
   const userId = req.body.userId;
-  const name = req.body.name;
+  const firstName = req.body.firstName;
+  const lastName =  req.body.lastName;
   const phone = req.body.phone;
   const email = req.body.email;
   const language = req.body.language;
+  const description = req.body.description;
   const pushRef = rootRef.ref("users/" + userId + "/contacts").push();
   pushRef.set({
     id: pushRef.key,
-    name: name,
+    firstName: firstName,
+    lastName: lastName,
     phone: phone,
     email: email,
     language: language,
-    groups: null
+    groups: null,
+    description: description
   }, (error) => {
     if (error) {
       res.statusCode = 400;
@@ -425,14 +450,18 @@ app.post("/createGroup", (req, res, next) => {
 
 app.post("/updateUserProfile", (req, res, next) => {
   const userId = req.body.userId;
-  const newName = req.body.newName;
+  const newFirstName = req.body.newFirstName;
+  const newLastName = req.body.newLastName;
   const newAgencyName = req.body.newAgencyName;
   const newEmail = req.body.newEmail;
   const newPhone = req.body.newPhone;
   const ref = rootRef.ref("users/" + userId);
   const updates = {};
-  if (newName != null) {
-    updates["name"] = newName;
+  if (newFirstName != null) {
+    updates["firstName"] = newFirstName;
+  }
+  if (newlastName != null) {
+    updates["lastName"] = newLastName;
   }
   if (newPhone != null) {
     updates["phone"] = newPhone;
@@ -467,14 +496,19 @@ app.post("/updateUserProfile", (req, res, next) => {
 app.post("/editContact", (req, res, next) => {
   const userId = req.body.userId;
   const contactId = req.body.contactId;
-  const newName = req.body.newName;
+  const newFirstName = req.body.newFirstName;
+  const newLastName = req.body.newLastName;
   const newPhone = req.body.newPhone;
   const newEmail = req.body.newEmail;
   const newLanguage = req.body.newLanguage;
+  const newDescription = req.body.newDescription;
   const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
   const updates = {};
-  if (newName != null) {
-    updates["name"] = newName;
+  if (newFirstName != null) {
+    updates["firstName"] = newFirstName;
+  }
+  if (newlastName != null) {
+    updates["lastName"] = newLastName;
   }
   if (newPhone != null) {
     updates["phone"] = newPhone;
@@ -484,6 +518,9 @@ app.post("/editContact", (req, res, next) => {
   }
   if (newLanguage != null) {
     updates["language"] = newLanguage;
+  }
+  if (newDescription != null) {
+    updates["description"] = newDescription;
   }
   ref.update(updates, (error) => {
     if (error) {
