@@ -96,14 +96,14 @@ app.get("/getUserProfileDetails", (req, res, next) => {
           success: true,
           responseCode: 200,
           message: "Profile details found successfully",
-          data: {
+          data: { user_profile_details: {
             id: data["id"],
             firstName: data["firstName"],
             lastName: data["lastName"],
             email: data["email"],
             agencyName: data["agencyName"],
             phone: data["phone"]
-          }
+          }}
         });
       } else {
         res.statusCode = 400;
@@ -149,7 +149,7 @@ app.get("/getContactDetails", (req, res, next) => {
         success: true,
         responseCode: 200,
         message: "Contact details found successfully",
-        data: {
+        data: {contact_details: {
           id: data["id"],
           firstName: data["firstName"],
           lastName: data["lastName"],
@@ -157,7 +157,7 @@ app.get("/getContactDetails", (req, res, next) => {
           language: data["language"],
           phone: data["phone"],
           groups: groups
-        }
+        }}
       });
     } else {
       res.statusCode = 200;
@@ -196,7 +196,7 @@ app.get("/getContacts", (req, res, next) => {
         success: true,
         responseCode: 200,
         message: "Contacts found successfully",
-        data: contacts
+        data: {contacts: contacts}
       });
     } else {
       res.statusCode = 200;
@@ -233,7 +233,7 @@ app.get("/getGroups", (req, res, next) => {
         success: true,
         responseCode: 200,
         message: "Groups found successfully",
-        data: groups
+        data: {groups: groups}
       });
     } else {
       res.statusCode = 200;
@@ -267,7 +267,7 @@ app.get("/getGroupDetails", (req, res, next) => {
         success: true,
         responseCode: 200,
         message: "Group details found successfully",
-        data: data
+        data: {group_details: data}
       });
     } else {
       res.statusCode = 200;
@@ -309,7 +309,7 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
           success: true,
           responseCode: 200,
           message: "Remaining contacts found successfully",
-          data: Object.values(result)
+          data: {remaining_contacts: Object.values(result)}
         });
       })
     } else {
@@ -335,6 +335,7 @@ app.post("/createUserProfile", (req, res, next) => {
   const firstName = req.body.firstName;
   const lastName =  req.body.lastName;
   const phone = req.body.phone;
+  const countryCode = req.body.countryCode;
   const email = req.body.email;
   const agencyName = req.body.agencyName;
   const password = req.body.password;
@@ -344,6 +345,7 @@ app.post("/createUserProfile", (req, res, next) => {
     firstName: firstName,
     lastName: lastName,
     phone: phone,
+    countryCode: countryCode,
     email: email,
     agencyName: agencyName,
     password: password,
@@ -374,6 +376,7 @@ app.post("/createContact", (req, res, next) => {
   const firstName = req.body.firstName;
   const lastName =  req.body.lastName;
   const phone = req.body.phone;
+  const countryCode = req.body.countryCode;
   const email = req.body.email;
   const language = req.body.language;
   const description = req.body.description;
@@ -383,6 +386,7 @@ app.post("/createContact", (req, res, next) => {
     firstName: firstName,
     lastName: lastName,
     phone: phone,
+    countryCode: countryCode,
     email: email,
     language: language,
     groups: null,
@@ -455,6 +459,7 @@ app.post("/updateUserProfile", (req, res, next) => {
   const newAgencyName = req.body.newAgencyName;
   const newEmail = req.body.newEmail;
   const newPhone = req.body.newPhone;
+  const newCountryCode = req.body.newCountryCode;
   const ref = rootRef.ref("users/" + userId);
   const updates = {};
   if (newFirstName != null) {
@@ -465,6 +470,9 @@ app.post("/updateUserProfile", (req, res, next) => {
   }
   if (newPhone != null) {
     updates["phone"] = newPhone;
+  }
+  if (newCountryCode != null) {
+    updates["countryCode"] = newCountryCode;
   }
   if (newEmail != null) {
     updates["email"] = newEmail;
@@ -502,6 +510,7 @@ app.post("/editContact", (req, res, next) => {
   const newEmail = req.body.newEmail;
   const newLanguage = req.body.newLanguage;
   const newDescription = req.body.newDescription;
+  const newCountryCode = req.body.newCountryCode;
   const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
   const updates = {};
   if (newFirstName != null) {
@@ -512,6 +521,9 @@ app.post("/editContact", (req, res, next) => {
   }
   if (newPhone != null) {
     updates["phone"] = newPhone;
+  }
+  if (newCountryCode != null) {
+    updates["countryCode"] = newCountryCode;
   }
   if (newEmail != null) {
     updates["email"] = newEmail;
