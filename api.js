@@ -33,55 +33,55 @@ app.post("/signIn", (req, res, next) => {
   const password = req.body.password;
   var query = firebase.database().ref("users");
   query.once("value")
-    .then(function(snapshot) {
-      snapshot.forEach(function(childSnapshot) {
-        var key = childSnapshot.key;
-        var data = childSnapshot.val();
+  .then(function(snapshot) {
+    snapshot.forEach(function(childSnapshot) {
+      var key = childSnapshot.key;
+      var data = childSnapshot.val();
 
-        if (data["email"] == email) {
-          if (data["password"] == password) {
-            const authToken = jwt.sign(data["id"], 'shhhhh');
+      if (data["email"] == email) {
+        if (data["password"] == password) {
+          const authToken = jwt.sign(data["id"], 'shhhhh');
 
-            const pushRef = rootRef.ref("users/" + data["id"]);
-            pushRef.update({authToken: authToken}, (error) => {
-              if (error) {
-                res.statusCode = 400;
-                res.send({
-                  success: false,
-                  responseCode: 400,
-                  message: "Auth token could not be created: " + error,
-                  data: {}
-                });
-              }
-            }); 
+          const pushRef = rootRef.ref("users/" + data["id"]);
+          pushRef.update({authToken: authToken}, (error) => {
+            if (error) {
+              res.statusCode = 400;
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "Auth token could not be created: " + error,
+                data: {}
+              });
+            }
+          }); 
 
-            res.statusCode = 200;
-            res.send({
-              success: true,
-              responseCode: 200,
-              message: "Sign in was successful",
-              data: {
-                id: data["id"],
-                name: data["name"],
-                email: data["email"],
-                agencyName: data["agencyName"],
-                phone: data["phone"],
-                auth_token: authToken
-              }
-            });
-          } else {
-            res.statusCode = 200;
-            res.send({
-              success: false,
-              responseCode: 200,
-              message: "Incorrect password",
-              data: {}
-            });
-          }
-        } 
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Sign in was successful",
+            data: {
+              id: data["id"],
+              name: data["name"],
+              email: data["email"],
+              agencyName: data["agencyName"],
+              phone: data["phone"],
+              auth_token: authToken
+            }
+          });
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: false,
+            responseCode: 200,
+            message: "Incorrect password",
+            data: {}
+          });
+        }
+      } 
 
-      });
-  });
+    });
+});
 });
 
 app.get("/getUserProfileDetails", (req, res, next) => {
@@ -255,6 +255,102 @@ app.get("/getGroups", (req, res, next) => {
   });
 });
 
+// app.get("/getGroups", (req, res, next) => {
+//   const userId = req.query.userId;
+//   rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+//     if (snapshot.exists()) {
+//       res.statusCode = 200;
+//       data = snapshot.val();
+//       groups = Object.values(data["groups"]);
+
+//       var memberDetails = {};
+//       const promises = [];
+
+
+//       for (var i = 0; i < groups.length; i++) {
+//         const members = Object.values(groups[i]["members"]);
+//         groups[i]["members"] = members
+//         var groupId = groups[i]["id"];
+
+
+//         //
+     
+
+//         for (var j = 0; j < members.length; j++) {
+//           let promise = rootRef.ref().child("users/" + userId + "/contacts/" + members[j]).get()
+//           .then(snapshot2 => {
+//             if (snapshot2.empty) {
+//              res.statusCode = 400;
+//              res.send({
+//               success: false,
+//               responseCode: 400,
+//               message: error,
+//               data: {}
+//             });
+//            }
+
+//            data2 = snapshot2.val();
+//            details = {
+//             id: data2["id"],
+//             firstName: data2["firstName"],
+//             lastName: data2["lastName"],
+//             email: data2["email"],
+//             language: data2["language"],
+//             phone: data2["phone"],
+//           };
+//           if (groupId in memberDetails) {
+//             memberDetails[groupId].push(details);
+//           } else {
+//             memberDetails[groupId] = [];
+//             memberDetails[groupId].push(details);
+//           }
+//           return;
+//         })
+//           .catch(err => {
+//             console.log('Error getting documents', err);
+//           });
+//           promises.push(promise);
+//         }
+        
+//         console.log(memberDetails);
+
+//         data["groups"][groupId]["members"] = memberDetails[groupId];
+//         //
+
+//       }
+      
+//         Promise.all(promises).then(() => {
+//           res.send({
+//             success: true,
+//             responseCode: 200,
+//             message: "Groups found successfully",
+//             data: {groups: Object.values(data["groups"])}
+//           });
+//         }).catch(err => {
+//           response.status(500);
+//         });
+
+//     } else {
+//       res.statusCode = 200;
+//       res.send({
+//         success: false,
+//         responseCode: 200,
+//         message: "No data available",
+//         data: {}
+//       });
+//     }
+//   }).catch((error) => {
+//      console.log(error);
+//     res.statusCode = 400;
+//     res.send({
+//       success: false,
+//       responseCode: 400,
+//       message: error,
+//       data: {}
+//     });
+//   });
+// });
+
 app.get("/getGroupDetails", (req, res, next) => {
   const userId = req.query.userId;
   const groupId = req.query.groupId;
@@ -262,12 +358,52 @@ app.get("/getGroupDetails", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      data["members"] = Object.values(data["members"]);
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: "Group details found successfully",
-        data: {group_details: data}
+      members = Object.values(data["members"]);
+      memberDetails = [];
+
+      var memberDetails = [];
+      const promises = [];
+
+      for (var i = 0; i < members.length; i++) {
+        let promise = rootRef.ref().child("users/" + userId + "/contacts/" + members[i]).get()
+        .then(snapshot2 => {
+          if (snapshot2.empty) {
+           res.statusCode = 400;
+           res.send({
+            success: false,
+            responseCode: 400,
+            message: error,
+            data: {}
+          });
+         }
+
+         data2 = snapshot2.val();
+         details = {
+          id: data2["id"],
+          firstName: data2["firstName"],
+          lastName: data2["lastName"],
+          email: data2["email"],
+          language: data2["language"],
+          phone: data2["phone"],
+        };
+        memberDetails.push(details);
+        return;
+      })
+        .catch(err => {
+          console.log('Error getting documents', err);
+        });
+        promises.push(promise);
+      }
+      data["members"] = memberDetails;
+      Promise.all(promises).then(() => {
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: "Group details found successfully",
+          data: {group_details: data}
+        });
+      }).catch(err => {
+        response.status(500);
       });
     } else {
       res.statusCode = 200;
