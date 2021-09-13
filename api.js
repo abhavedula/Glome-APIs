@@ -81,6 +81,13 @@ app.post("/signIn", (req, res, next) => {
       } 
 
     });
+res.statusCode = 200;
+res.send({
+  success: false,
+  responseCode: 200,
+  message: "Incorrect email",
+  data: {}
+});
 });
 });
 
@@ -128,7 +135,7 @@ app.get("/getUserProfileDetails", (req, res, next) => {
     res.send({
       success: false,
       responseCode: 400,
-      message: error,
+      message: "Profile details not found: " + error,
       data: {}
     });
   });
@@ -145,20 +152,57 @@ app.get("/getContactDetails", (req, res, next) => {
       if (data["groups"] != null)  {
         groups = Object.values(data["groups"]);
       }
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: "Contact details found successfully",
-        data: {contact_details: {
-          id: data["id"],
-          firstName: data["firstName"],
-          lastName: data["lastName"],
-          email: data["email"],
-          language: data["language"],
-          phone: data["phone"],
-          groups: groups
-        }}
+
+      var groupDetails = [];
+      const promises = [];
+
+      for (var i = 0; i < groups.length; i++) {
+        let promise = rootRef.ref().child("users/" + userId + "/groups/" + groups[i]).get()
+        .then(snapshot2 => {
+          if (snapshot2.empty) {
+           res.statusCode = 400;
+           res.send({
+            success: false,
+            responseCode: 400,
+            message: error,
+            data: {}
+          });
+         }
+
+         data2 = snapshot2.val();
+         details = {
+          id: data2["id"],
+          name: data2["name"],
+        };
+        groupDetails.push(details);
+        return;
+      })
+        .catch(err => {
+          console.log('Error getting documents', err);
+        });
+        promises.push(promise);
+      }
+      Promise.all(promises).then(() => {
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: "Contact details found successfully",
+          data: {contact_details: {
+            id: data["id"],
+            firstName: data["firstName"],
+            lastName: data["lastName"],
+            email: data["email"],
+            language: data["language"],
+            phone: data["phone"],
+            countryCode: data["countryCode"],
+            description: data["description"],
+            groups: groupDetails,
+          }}
+        });
+      }).catch(err => {
+        response.status(500);
       });
+
     } else {
       res.statusCode = 200;
       res.send({
@@ -173,7 +217,7 @@ app.get("/getContactDetails", (req, res, next) => {
     res.send({
       success: false,
       responseCode: 400,
-      message: error,
+      message: "Contact details not found: " + error,
       data: {}
     });
   });
@@ -185,7 +229,11 @@ app.get("/getContacts", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      contacts = Object.values(data["contacts"]);
+      if ("contacts" in data) {
+        contacts = Object.values(data["contacts"]);
+      } else {
+        contacts = [];
+      }
       for (var i = 0; i < contacts.length; i++) {
         if (contacts[i]["groups"] != null) {
           contacts[i]["groups"] = Object.values(contacts[i]["groups"]);
@@ -212,7 +260,7 @@ app.get("/getContacts", (req, res, next) => {
     res.send({
       success: false,
       responseCode: 400,
-      message: error,
+      message: "Contacts not found: " + error,
       data: {}
     });
   });
@@ -224,7 +272,11 @@ app.get("/getGroups", (req, res, next) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      groups = Object.values(data["groups"]);
+      if ("groups" in data) {
+        groups = Object.values(data["groups"]);
+      } else {
+        groups = [];
+      }
       for (var i = 0; i < groups.length; i++) {
         groups[i]["members"] = Object.values(groups[i]["members"]);
 
@@ -249,7 +301,7 @@ app.get("/getGroups", (req, res, next) => {
     res.send({
       success: false,
       responseCode: 400,
-      message: error,
+      message: "Groups not found: " + error,
       data: {}
     });
   });
@@ -274,7 +326,7 @@ app.get("/getGroups", (req, res, next) => {
 
 
 //         //
-     
+
 
 //         for (var j = 0; j < members.length; j++) {
 //           let promise = rootRef.ref().child("users/" + userId + "/contacts/" + members[j]).get()
@@ -311,14 +363,14 @@ app.get("/getGroups", (req, res, next) => {
 //           });
 //           promises.push(promise);
 //         }
-        
+
 //         console.log(memberDetails);
 
 //         data["groups"][groupId]["members"] = memberDetails[groupId];
 //         //
 
 //       }
-      
+
 //         Promise.all(promises).then(() => {
 //           res.send({
 //             success: true,
@@ -359,7 +411,6 @@ app.get("/getGroupDetails", (req, res, next) => {
       res.statusCode = 200;
       data = snapshot.val();
       members = Object.values(data["members"]);
-      memberDetails = [];
 
       var memberDetails = [];
       const promises = [];
@@ -385,6 +436,8 @@ app.get("/getGroupDetails", (req, res, next) => {
           email: data2["email"],
           language: data2["language"],
           phone: data2["phone"],
+          countryCode: data2["countryCode"],
+          description: data2["description"],
         };
         memberDetails.push(details);
         return;
@@ -419,7 +472,7 @@ app.get("/getGroupDetails", (req, res, next) => {
     res.send({
       success: false,
       responseCode: 400,
-      message: error,
+      message: "Group details not found: " + error,
       data: {}
     });
   });
@@ -461,7 +514,7 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
     res.send({
       success: false,
       responseCode: 400,
-      message: error,
+      message: "Contacts not found: " + error,
       data: {}
     });
   });
@@ -492,7 +545,7 @@ app.post("/createUserProfile", (req, res, next) => {
       res.send({
         success: false,
         responseCode: 400,
-        message: error,
+        message: "Profile details not created: " + error,
         data: {}
       });
     } else {
@@ -516,76 +569,132 @@ app.post("/createContact", (req, res, next) => {
   const email = req.body.email;
   const language = req.body.language;
   const description = req.body.description;
-  const pushRef = rootRef.ref("users/" + userId + "/contacts").push();
-  pushRef.set({
-    id: pushRef.key,
-    firstName: firstName,
-    lastName: lastName,
-    phone: phone,
-    countryCode: countryCode,
-    email: email,
-    language: language,
-    groups: null,
-    description: description
-  }, (error) => {
-    if (error) {
+  
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
       res.statusCode = 400;
       res.send({
         success: false,
         responseCode: 400,
-        message: error,
+        message: "User does not exist",
         data: {}
       });
     } else {
-      res.statusCode = 200;
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: 'Contact created successfully',
-        data: {}
+      const pushRef = rootRef.ref("users/" + userId + "/contacts").push();
+      pushRef.set({
+        id: pushRef.key,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        countryCode: countryCode,
+        email: email,
+        language: language,
+        groups: null,
+        description: description
+      }, (error) => {
+        if (error) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Contact not created: " + error,
+            data: {}
+          });
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: 'Contact created successfully',
+            data: {}
+          });
+        }
       });
     }
-  });
+  })
 });
 
 app.post("/createGroup", (req, res, next) => {
   const userId = req.body.userId;
   const name = req.body.name;
   const members = req.body.members;
-  const groupRef = rootRef.ref("users/" + userId + "/groups").push();
-  const membersObj = {};
-  members.forEach(function (contactId, index) {
-    membersObj[contactId] = contactId;
-  });
-  groupRef.set({
-    id: groupRef.key,
-    name: name,
-    members: membersObj 
-  }, (error) => {
-    if (error) {
+  
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
       res.statusCode = 400;
       res.send({
         success: false,
         responseCode: 400,
-        message: error,
+        message: "User does not exist",
         data: {}
       });
     } else {
-      members.forEach(function (contactId, index) {
-        const pushRef = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups").push();
-        const key = pushRef.key;
-        pushRef.set(groupRef.key);
-      });
 
-      res.statusCode = 200;
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: 'Group created successfully',
-        data: {}
+      const groupRef = rootRef.ref("users/" + userId + "/groups").push();
+      const membersObj = {};
+      members.forEach(function (contactId, index) {
+        membersObj[contactId] = contactId;
+      });
+      const groupKey = groupRef.key;
+      groupRef.set({
+        id: groupKey,
+        name: name,
+      }, (error) => {
+        if (error) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Group not created: " + error,
+            data: {}
+          });
+        } else {
+          members.forEach(function (contactId, index) {
+            rootRef.ref().child("users/" + userId + "/contacts/" + contactId).get().then((snapshot) => {
+              var shouldAdd = true;
+              if (!snapshot.exists()) {
+
+                shouldAdd = false;
+              } 
+
+              if (shouldAdd) {
+                const pushRef = rootRef.ref().child("users/" + userId + "/contacts/" + contactId + "/groups");
+                const key = pushRef.key;
+                const obj = {};
+                obj[groupKey] = groupKey;
+                pushRef.update(obj);
+
+                const groupRef = rootRef.ref().child("users/" + userId + "/groups/" + groupKey + "/members");
+                const contacttObj = {};
+                contacttObj[contactId] = contactId;
+                groupRef.update(contacttObj, (error) => {
+                  if (error) {
+                    res.statusCode = 400;
+                    res.send({
+                      success: false,
+                      responseCode: 400,
+                      message: "Contact could not be added to group: " + error,
+                      data: {}
+                    });
+                  } 
+                })
+              }
+
+            })    
+
+          });
+          res.statusCode = 200;
+          var message = 'Group created successfully.';
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: message,
+            data: {}
+          });  
+        }
       });
     }
-  });
+  })
 });
 
 app.post("/updateUserProfile", (req, res, next) => {
@@ -596,45 +705,58 @@ app.post("/updateUserProfile", (req, res, next) => {
   const newEmail = req.body.newEmail;
   const newPhone = req.body.newPhone;
   const newCountryCode = req.body.newCountryCode;
+
   const ref = rootRef.ref("users/" + userId);
-  const updates = {};
-  if (newFirstName != null) {
-    updates["firstName"] = newFirstName;
-  }
-  if (newlastName != null) {
-    updates["lastName"] = newLastName;
-  }
-  if (newPhone != null) {
-    updates["phone"] = newPhone;
-  }
-  if (newCountryCode != null) {
-    updates["countryCode"] = newCountryCode;
-  }
-  if (newEmail != null) {
-    updates["email"] = newEmail;
-  }
-  if (newAgencyName != null) {
-    updates["agencyName"] = newAgencyName;
-  }
-  ref.update(updates, (error) => {
-    if (error) {
+  ref.get().then((snapshot) => {
+    if (!snapshot.exists()) {
       res.statusCode = 400;
       res.send({
         success: false,
         responseCode: 400,
-        message: error,
+        message: "User does not exist",
         data: {}
       });
     } else {
-      res.statusCode = 200;
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: 'User profile updated successfully',
-        data: {}
+      const updates = {};
+      if (newFirstName != null) {
+        updates["firstName"] = newFirstName;
+      }
+      if (newLastName != null) {
+        updates["lastName"] = newLastName;
+      }
+      if (newPhone != null) {
+        updates["phone"] = newPhone;
+      }
+      if (newCountryCode != null) {
+        updates["countryCode"] = newCountryCode;
+      }
+      if (newEmail != null) {
+        updates["email"] = newEmail;
+      }
+      if (newAgencyName != null) {
+        updates["agencyName"] = newAgencyName;
+      }
+      ref.update(updates, (error) => {
+        if (error) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "User profile not updated: " + error,
+            data: {}
+          });
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: 'User profile updated successfully',
+            data: {}
+          });
+        }
       });
     }
-  });
+  })
 });
 
 app.post("/editContact", (req, res, next) => {
@@ -647,71 +769,118 @@ app.post("/editContact", (req, res, next) => {
   const newLanguage = req.body.newLanguage;
   const newDescription = req.body.newDescription;
   const newCountryCode = req.body.newCountryCode;
-  const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
-  const updates = {};
-  if (newFirstName != null) {
-    updates["firstName"] = newFirstName;
-  }
-  if (newlastName != null) {
-    updates["lastName"] = newLastName;
-  }
-  if (newPhone != null) {
-    updates["phone"] = newPhone;
-  }
-  if (newCountryCode != null) {
-    updates["countryCode"] = newCountryCode;
-  }
-  if (newEmail != null) {
-    updates["email"] = newEmail;
-  }
-  if (newLanguage != null) {
-    updates["language"] = newLanguage;
-  }
-  if (newDescription != null) {
-    updates["description"] = newDescription;
-  }
-  ref.update(updates, (error) => {
-    if (error) {
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
       res.statusCode = 400;
       res.send({
         success: false,
         responseCode: 400,
-        message: error,
+        message: "User does not exist",
         data: {}
       });
     } else {
-      res.statusCode = 200;
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: 'Contact updated successfully',
-        data: {}
+      const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
+      ref.once('value', function(snapshot) {
+        if (snapshot.exists()) {
+          const updates = {};
+          if (newFirstName != null) {
+            updates["firstName"] = newFirstName;
+          }
+          if (newLastName != null) {
+            updates["lastName"] = newLastName;
+          }
+          if (newPhone != null) {
+            updates["phone"] = newPhone;
+          }
+          if (newCountryCode != null) {
+            updates["countryCode"] = newCountryCode;
+          }
+          if (newEmail != null) {
+            updates["email"] = newEmail;
+          }
+          if (newLanguage != null) {
+            updates["language"] = newLanguage;
+          }
+          if (newDescription != null) {
+            updates["description"] = newDescription;
+          }
+          ref.update(updates, (error) => {
+            if (error) {
+              res.statusCode = 400;
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "Contact not updatetd: " + error,
+                data: {}
+              });
+            } else {
+              res.statusCode = 200;
+              res.send({
+                success: true,
+                responseCode: 200,
+                message: 'Contact updated successfully',
+                data: {}
+              });
+            }
+          });
+        } else {
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Contact does not exist",
+            data: {}
+          });
+        }
       });
-    }
-  });
+}
+})
 });
 
 app.post("/editGroupName", (req, res, next) => {
   const userId = req.body.userId;
   const groupId = req.body.groupId;
   const newName = req.body.newName;
-  const ref = rootRef.ref("users/" + userId + "/groups/" + groupId);
-  ref.update({name: newName}, (error) => {
-    if (error) {
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
       res.statusCode = 400;
       res.send({
         success: false,
         responseCode: 400,
-        message: error,
+        message: "User does not exist",
         data: {}
       });
     } else {
-      res.statusCode = 200;
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: 'Group updated successfully',
-        data: {}
+      const ref = rootRef.ref("users/" + userId + "/groups/" + groupId);
+      ref.once('value', function(snapshot) {
+        if (snapshot.exists()) {
+          ref.update({name: newName}, (error) => {
+            if (error) {
+              res.statusCode = 400;
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "Group not updatetd: " + error,
+                data: {}
+              });
+            } else {
+              res.statusCode = 200;
+              res.send({
+                success: true,
+                responseCode: 200,
+                message: 'Group updated successfully',
+                data: {}
+              });
+            }
+          });
+        } else {
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Group does not exist",
+            data: {}
+          });
+        }
       });
     }
   });
@@ -720,69 +889,122 @@ app.post("/editGroupName", (req, res, next) => {
 app.post("/addToGroup", (req, res, next) => {
   const userId = req.body.userId;
   const groupId = req.body.groupId;
-  const contactId = req.body.contactId;
-  const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members");
-  ref.child(contactId).set(contactId, (error) => {
-    if (error) {
+  const contactIds = req.body.contactIds;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
       res.statusCode = 400;
-      res.send('Data could not be saved.' + error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: "User does not exist",
+        data: {}
+      });
     } else {
-      const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups");
-      ref2.child(groupId).set(groupId, (error) => {
-        if (error) {
-         res.statusCode = 400;
-         res.send({
-          success: false,
-          responseCode: 400,
-          message: error,
-          data: {}
-        });
-       } else {
-         res.statusCode = 200;
-         res.send({
-          success: true,
-          responseCode: 200,
-          message: 'Added to group successfully',
-          data: {}
-        });
-       }
-     });
-    }
-  });
+      const ref = rootRef.ref("users/" + userId + "/groups/" + groupId);
+      ref.once('value', function(snapshot) {
+        if (snapshot.exists()) {
+          const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members");
+
+          contactIds.forEach(function (contactId, index) {
+            ref.child(contactId).set(contactId, (error) => {
+              if (error) {
+                res.statusCode = 400;
+                res.send('Data could not be saved.' + error);
+              } else {
+                const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups");
+                ref2.child(groupId).set(groupId, (error) => {
+                  if (error) {
+                   res.statusCode = 400;
+                   res.send({
+                    success: false,
+                    responseCode: 400,
+                    message: "Contact could not be added to group: " + error,
+                    data: {}
+                  });
+                 } 
+               });
+              }
+            });
+          });
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: 'Added to group successfully',
+            data: {}
+          });
+        } else {
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Group does not exist",
+            data: {}
+          });
+        }
+      });
+}
+});
 });
 
 app.post("/removeFromGroup", (req, res, next) => {
   const userId = req.body.userId;
   const groupId = req.body.groupId;
   const contactId = req.body.contactId;
-  const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members/" + contactId);
-  ref.remove((error) => {
-    if (error) {
+
+  //
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
       res.statusCode = 400;
-      res.send('Data could not be saved.' + error);
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: "User does not exist",
+        data: {}
+      });
     } else {
-      const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups/" + groupId);
-      ref2.remove((error) => {
-        if (error) {
-          res.statusCode = 400;
+      const ref = rootRef.ref("users/" + userId + "/groups/" + groupId);
+      ref.once('value', function(snapshot) {
+        if (snapshot.exists()) {
+          const ref = rootRef.ref("users/" + userId + "/groups/" + groupId + "/members/" + contactId);
+          ref.remove((error) => {
+            if (error) {
+              res.statusCode = 400;
+              res.send('Data could not be saved.' + error);
+            } else {
+              const ref2 = rootRef.ref("users/" + userId + "/contacts/" + contactId + "/groups/" + groupId);
+              ref2.remove((error) => {
+                if (error) {
+                  res.statusCode = 400;
+                  res.send({
+                    success: false,
+                    responseCode: 400,
+                    message: "Contact could not be removed from group: " + error,
+                    data: {}
+                  });
+                } else {
+                  res.statusCode = 200;
+                  res.send({
+                    success: true,
+                    responseCode: 200,
+                    message: 'Removed from group successfully',
+                    data: {}
+                  });
+                }
+              });
+            }
+          });
+        } else {
           res.send({
             success: false,
             responseCode: 400,
-            message: error,
-            data: {}
-          });
-        } else {
-          res.statusCode = 200;
-          res.send({
-            success: true,
-            responseCode: 200,
-            message: 'Removed from group successfully',
+            message: "Group does not exist",
             data: {}
           });
         }
       });
-    }
-  });
+}
+});
 });
 
 app.post("/sendOTP", (req, res, next) => {
@@ -792,16 +1014,10 @@ app.post("/sendOTP", (req, res, next) => {
   const max = Math.floor(999999);
   const otp = Math.floor(Math.random() * (max - min) + min)
 
-  var query = firebase.database().ref("users");
-  query.once("value")
-  .then(function(snapshot) {
-    snapshot.forEach(function(childSnapshot) {
-      var key = childSnapshot.key;
-      var data = childSnapshot.val();
-
-          // Get userID and save OTP
-          if (data["email"] == email) {
-            const userId = data["id"];
+  firebase.database().ref().child("users").orderByChild("email").equalTo(email).once("value",snapshot => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const userId = Object.values(data)[0]["id"];
             const pushRef = rootRef.ref("users/" + userId);
             pushRef.update({otp: otp}, (error) => {
               if (error) {
@@ -819,6 +1035,7 @@ app.post("/sendOTP", (req, res, next) => {
             rootRef.ref().child("mail").get().then((snapshot) => {
               if (snapshot.exists()) {
                 password = snapshot.val();
+
                 var transporter = nodemailer.createTransport({
                   service: 'gmail',
                   auth: {
@@ -839,14 +1056,14 @@ app.post("/sendOTP", (req, res, next) => {
                     console.log(error);
                   } else {
                     console.log('Email sent: ' + info.response);
+                    res.statusCode = 200;
+                    res.send({
+                      success: true,
+                      responseCode: 200,
+                      message: 'OTP sent successfully',
+                      data: {}
+                    });
                   }
-                });
-                res.statusCode = 200;
-                res.send({
-                  success: true,
-                  responseCode: 200,
-                  message: 'OTP sent successfully',
-                  data: {}
                 });
 
               } else {
@@ -867,18 +1084,16 @@ app.post("/sendOTP", (req, res, next) => {
                 data: {}
               });
             });
-          } else {
-            res.statusCode = 400;
-            res.send({
-              success: false,
-              responseCode: 400,
-              message: "Incorrect email",
-              data: {}
-            });
-          }
-          
-        });
-});
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "Incorrect email",
+        data: {}
+      });
+    }
+  });
 });
 
 
@@ -912,32 +1127,27 @@ app.post("/verifyOTP", (req, res, next) => {
               data: {}
             });
            }
-         } else {
-          res.statusCode = 200;
-          res.send({
-            success: false,
-            responseCode: 200,
-            message: "Incorrect email",
-            data: {}
-          });
-        }
-
-      });
+         } 
+       });
+    res.statusCode = 200;
+    res.send({
+      success: false,
+      responseCode: 200,
+      message: "Incorrect email",
+      data: {}
+    });
   });
 });
 
 app.post("/saveNewPassword", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-  var query = firebase.database().ref("users");
-  query.once("value")
-  .then(function(snapshot) {
-    snapshot.forEach(function(childSnapshot) {
-      var key = childSnapshot.key;
-      var data = childSnapshot.val();
 
-      if (data["email"] == email) {
-        const userId = data["id"];
+  firebase.database().ref().child("users").orderByChild("email").equalTo(email).once("value",snapshot => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+
+          const userId = Object.values(data)[0]["id"];
         const pushRef = rootRef.ref("users/" + userId);
         pushRef.update({password: password}, (error) => {
           if (error) {
@@ -958,17 +1168,15 @@ app.post("/saveNewPassword", (req, res, next) => {
           });
          }
        });
-      } else {
-        res.statusCode = 200;
-        res.send({
-          success: false,
-          responseCode: 200,
-          message: "Incorrect email",
-          data: {}
-        });
-      }
-
-    });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "Incorrect email",
+        data: {}
+      });
+    }
   });
 });
 
