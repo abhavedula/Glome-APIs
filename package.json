@@ -27,6 +27,9 @@
     "firebase": "^8.7.1",
     "jsonwebtoken": "^8.5.1",
     "node-mandrill": "^1.0.1",
-    "nodemailer": "^6.6.3"
+    "nodemailer": "^6.6.3",
+    "read-excel-file": "^5.2.10",
+    "uuid": "^8.3.2",
+    "xlsx": "^0.17.2"
   }
 }

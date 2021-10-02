@@ -1341,6 +1341,107 @@ app.post("/saveNewPassword", (req, res, next) => {
   });
 });
 
+app.get("/getTemplateMessageList", (req, res, next) => {
+  rootRef.ref().child("templateMessages").get().then((snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      res.send({
+      success: true,
+      responseCode: 200,
+      message: "Template messages found",
+      data: data
+    });
+    } 
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Template messages not found: " + error,
+      data: {}
+    });
+  });
+});
+
+app.get("/getMessageTranslationForUser", (req, res, next) => {
+  const userId = req.body.userId;
+  const messageTemplateId = req.body.messageTemplateId;
+  const contactId = req.body.contactId;
+
+  rootRef.ref().child("users/" + userId + "/contacts/" + contactId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+
+      rootRef.ref().child("templateMessages/" + messageTemplateId + "/" + data["language"]).get().then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          res.send({
+          success: true,
+          responseCode: 200,
+          message: "Template message translation found",
+          data: data
+        });
+        } 
+      }).catch((error) => {
+        res.statusCode = 400;
+        res.send({
+          success: false,
+          responseCode: 400,
+          message: "Template message translation not found: " + error,
+          data: {}
+        });
+      });
+
+
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User or contact do not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Contact details not found: " + error,
+      data: {}
+    });
+  });
+});
+
+// app.post("/saveTemplateMessages", (req, res, next) => {
+
+//   var messages = [];
+//   var messagesObj = {};
+
+//   const xlsxFile = require('read-excel-file/node');
+//   var uuid = require('uuid');
+ 
+//   xlsxFile('./messages.xlsx').then((rows) => {
+//    for (var i = 0; i < rows.length; i++) {
+//     var row = rows[i];
+//       for (var j = 1; j < row.length; j++) {
+//         if (messages.length < j) {
+//           messages.push({});
+//         }
+//         messages[j-1][row[0]] = row[j];
+//       }
+//    }
+//    for (var i = 0; i < messages.length; i++) {
+//     messagesObj[uuid.v4()] = messages[i];
+//    }
+//    //console.log(messages);
+//    rootRef.ref('templateMessages').set(
+//        messagesObj
+//     );
+//   })
+// });
+
 
 
 //Server
