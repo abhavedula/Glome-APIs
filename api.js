@@ -1420,49 +1420,68 @@ app.post("/sendMessage", (req, res, next) => {
   const phone = req.body.phone;
   const countryCode = req.body.countryCode;
 
-  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+  rootRef.ref().get().then((snapshot) => {
     if (snapshot.exists()) {
-      res.statusCode = 200;
-      data = snapshot.val();
-
-      const accountSid = 'ACfd625c80670237064ee9dae1fc445844'; 
-      const authToken = '20cd501dad46526bbd84b799876143f4'; 
-      const client = require('twilio')(accountSid, authToken); 
-
-      client.messages 
-      .create({         
-       to: countryCode + phone,
-       body: message,
-       from: data["countryCode"] + data["phone"]
-     }) 
-      .then(message => {
-        if (message["errorMessage"] == null) {
+      var error = false;
+      rootData = snapshot.val();
+      if ("users" in rootData) {
+        if (userId in rootData["users"]) {
           res.statusCode = 200;
-          res.send({
-            success: true,
-            responseCode: 200,
-            message: "Message sent successfully",
-            data: {}
-          });
+          data = rootData["users"][userId];
+
+          const accountSid = rootData["twilio"]["accountSid"];
+          const authToken = rootData["twilio"]["authToken"];
+          const client = require('twilio')(accountSid, authToken); 
+
+          client.messages 
+          .create({         
+           to: countryCode + phone,
+           body: message,
+           from: data["countryCode"] + data["phone"]
+         }) 
+          .then(message => {
+            if (message["errorMessage"] == null) {
+              res.statusCode = 200;
+              res.send({
+                success: true,
+                responseCode: 200,
+                message: "Message sent successfully",
+                data: {}
+              });
+            } else {
+              res.statusCode = 200;
+              res.send({
+                success: false,
+                responseCode: 200,
+                message: "Message could not be sent: " + message["errorMessage"],
+                data: {}
+              });
+            }
+          }) 
+          .done();
         } else {
-          res.statusCode = 200;
-          res.send({
-            success: false,
-            responseCode: 200,
-            message: "Message could not be sent: " + message["errorMessage"],
-            data: {}
-          });
+          error = true;
         }
-      }) 
-      .done();
+      } else {
+        error = true;
+      }
 
+      if (error) {
+        res.statusCode = 200;
+        res.send({
+          success: false,
+          responseCode: 200,
+          message: "User does not exist",
+          data: {}
+        });
+      }
 
     } else {
       res.statusCode = 200;
       res.send({
         success: false,
         responseCode: 200,
-        message: "User does not exist",
+        message: "Data could not be found",
         data: {}
       });
     }
@@ -1482,67 +1501,86 @@ app.post("/viewChatHistory", (req, res, next) => {
   const userId = req.body.userId;
   const contactId = req.body.contactId;
 
-  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+  rootRef.ref().get().then((snapshot) => {
     if (snapshot.exists()) {
-      res.statusCode = 200;
-      data = snapshot.val();
+      rootData = snapshot.val();
+      var error = false;
 
-      var userPhone =  data["countryCode"] + data["phone"];
-      var contactPhone;
-      if ("contacts" in data) {
-        if (contactId in data["contacts"]) {
-          contactPhone = data["contacts"][contactId]["countryCode"] + data["contacts"][contactId]["phone"];
+      if ("users" in rootData) {
+        if (userId in rootData["users"]) {
+            var data = rootData["users"][userId];
+            var userPhone =  data["countryCode"] + data["phone"];
+            var contactPhone;
+            if ("contacts" in data) {
+              if (contactId in data["contacts"]) {
+                contactPhone = data["contacts"][contactId]["countryCode"] + data["contacts"][contactId]["phone"];
+              } else {
+                res.statusCode = 200;
+                res.send({
+                  success: false,
+                  responseCode: 200,
+                  message: "Contact does not exist",
+                  data: {}
+                });
+              }
+            } else {
+             res.statusCode = 200;
+             res.send({
+              success: false,
+              responseCode: 200,
+              message: "Contact does not exist",
+              data: {}
+            });
+           }
+
+
+           const accountSid = rootData["twilio"]["accountSid"];
+           const authToken = rootData["twilio"]["authToken"];
+           const client = require('twilio')(accountSid, authToken); 
+           var messagesToReturn = [];
+
+           client.messages.list({limit: 20})
+           .then(messages => {
+              messages.forEach(m => {
+                messagesToReturn.push({
+                  "body": m["body"],
+                  "from": m["from"],
+                  "to": m["to"],
+                  "date": m["dateSent"]
+                });
+              });
+              res.statusCode = 200;
+              res.send({
+                success: true,
+                responseCode: 200,
+                message: "Chat history found",
+                data: {messagesToReturn}
+              });
+            });
+
         } else {
-          res.statusCode = 200;
-          res.send({
-            success: false,
-            responseCode: 200,
-            message: "Contact does not exist",
-            data: {}
-          });
-        }
+          error = true;
+        } 
       } else {
-       res.statusCode = 200;
-       res.send({
-        success: false,
-        responseCode: 200,
-        message: "Contact does not exist",
-        data: {}
-      });
-     }
+        error = true;
+      }
 
-
-     const accountSid = 'ACfd625c80670237064ee9dae1fc445844'; 
-     const authToken = '20cd501dad46526bbd84b799876143f4'; 
-     const client = require('twilio')(accountSid, authToken); 
-     var messagesToReturn = [];
-
-     client.messages.list({limit: 20})
-     .then(messages => {
-        messages.forEach(m => {
-          messagesToReturn.push({
-            "body": m["body"],
-            "from": m["from"],
-            "to": m["to"],
-            "date": m["dateSent"]
-          });
-        });
+      if (error) {
         res.statusCode = 200;
         res.send({
-          success: true,
+          success: false,
           responseCode: 200,
-          message: "Chat history found",
-          data: {messagesToReturn}
+          message: "User does not exist",
+          data: {}
         });
-      });
-
+      }
 
    } else {
     res.statusCode = 200;
     res.send({
       success: false,
       responseCode: 200,
-      message: "User does not exist",
+      message: "Data could not be found",
       data: {}
     });
   }
