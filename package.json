@@ -29,6 +29,7 @@
     "node-mandrill": "^1.0.1",
     "nodemailer": "^6.6.3",
     "read-excel-file": "^5.2.10",
+    "twilio": "^3.68.0",
     "uuid": "^8.3.2",
     "xlsx": "^0.17.2"
   }

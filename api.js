@@ -570,28 +570,28 @@ app.post("/createUserProfile", (req, res, next) => {
         data: {}
       });
     } else {
-       rootRef.ref().child("users/" + pushRef.key).get().then((snapshot) => {
-        if (snapshot.exists()) {
-          data = snapshot.val();
-          res.statusCode = 200;
-          res.send({
-            success: true,
-            responseCode: 200,
-            message: 'User created successfully',
-            data: { user_profile_details: {
-                id: data["id"],
-                firstName: data["firstName"],
-                lastName: data["lastName"],
-                email: data["email"],
-                agencyName: data["agencyName"],
-                phone: data["phone"],
-                countryCode: data["countryCode"]
-              }}
-          });
-        }
-      })
-    }
-  });
+     rootRef.ref().child("users/" + pushRef.key).get().then((snapshot) => {
+      if (snapshot.exists()) {
+        data = snapshot.val();
+        res.statusCode = 200;
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: 'User created successfully',
+          data: { user_profile_details: {
+            id: data["id"],
+            firstName: data["firstName"],
+            lastName: data["lastName"],
+            email: data["email"],
+            agencyName: data["agencyName"],
+            phone: data["phone"],
+            countryCode: data["countryCode"]
+          }}
+        });
+      }
+    })
+   }
+ });
 });
 
 app.post("/createContact", (req, res, next) => {
@@ -636,10 +636,10 @@ app.post("/createContact", (req, res, next) => {
           });
         } else {
           rootRef.ref().child("users/" + userId + "/contacts/" + pushRef.key).get().then((snapshot) => {
-          if (snapshot.exists()) {
-            res.statusCode = 200;
-            data = snapshot.val();
-            res.send({
+            if (snapshot.exists()) {
+              res.statusCode = 200;
+              data = snapshot.val();
+              res.send({
                 success: true,
                 responseCode: 200,
                 message: 'Contact created successfully',
@@ -659,8 +659,8 @@ app.post("/createContact", (req, res, next) => {
           })
         }
       });
-    }
-  })
+}
+})
 });
 
 app.post("/createGroup", (req, res, next) => {
@@ -731,23 +731,23 @@ app.post("/createGroup", (req, res, next) => {
 
             })    
 
-          });
-          res.statusCode = 200;
-          var message = 'Group created successfully.';
-          res.send({
-            success: true,
-            responseCode: 200,
-            message: message,
-            data: {group_details: {
-              id: groupKey,
-              name: name,
-              members: members
-            }}
-          });  
-        }
-      });
-    }
-  })
+});
+res.statusCode = 200;
+var message = 'Group created successfully.';
+res.send({
+  success: true,
+  responseCode: 200,
+  message: message,
+  data: {group_details: {
+    id: groupKey,
+    name: name,
+    members: members
+  }}
+});  
+}
+});
+}
+})
 });
 
 app.post("/updateUserProfile", (req, res, next) => {
@@ -800,14 +800,14 @@ app.post("/updateUserProfile", (req, res, next) => {
           });
         } else {
           rootRef.ref().child("users/" + userId).get().then((snapshot) => {
-          if (snapshot.exists()) {
-            data = snapshot.val();
-            res.statusCode = 200;
-            res.send({
-              success: true,
-              responseCode: 200,
-              message: 'User profile updated successfully',
-              data: { user_profile_details: {
+            if (snapshot.exists()) {
+              data = snapshot.val();
+              res.statusCode = 200;
+              res.send({
+                success: true,
+                responseCode: 200,
+                message: 'User profile updated successfully',
+                data: { user_profile_details: {
                   id: data["id"],
                   firstName: data["firstName"],
                   lastName: data["lastName"],
@@ -816,13 +816,13 @@ app.post("/updateUserProfile", (req, res, next) => {
                   phone: data["phone"],
                   countryCode: data["countryCode"]
                 }}
-            });
-          }
-        })
+              });
+            }
+          })
         }
       });
-    }
-  })
+}
+})
 });
 
 app.post("/editContact", (req, res, next) => {
@@ -882,14 +882,14 @@ app.post("/editContact", (req, res, next) => {
               });
             } else {
               rootRef.ref().child("users/" + userId + "/contacts/" + contactId).get().then((snapshot) => {
-              if (snapshot.exists()) {
-                res.statusCode = 200;
-                data = snapshot.val();
-                groups = [];
-                if (data["groups"] != null)  {
-                  groups = Object.values(data["groups"]);
-                }
-                res.send({
+                if (snapshot.exists()) {
+                  res.statusCode = 200;
+                  data = snapshot.val();
+                  groups = [];
+                  if (data["groups"] != null)  {
+                    groups = Object.values(data["groups"]);
+                  }
+                  res.send({
                     success: true,
                     responseCode: 200,
                     message: 'Contact updated successfully',
@@ -907,17 +907,17 @@ app.post("/editContact", (req, res, next) => {
                   });
                 }
               })
-            }
-          });
-        } else {
-          res.send({
-            success: false,
-            responseCode: 400,
-            message: "Contact does not exist",
-            data: {}
-          });
-        }
-      });
+}
+});
+} else {
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Contact does not exist",
+    data: {}
+  });
+}
+});
 }
 })
 });
@@ -950,45 +950,45 @@ app.post("/editGroupName", (req, res, next) => {
               });
             } else {
               rootRef.ref().child("users/" + userId + "/groups/" + groupId).get().then((snapshot) => {
-              if (snapshot.exists()) {
-                res.statusCode = 200;
-                data = snapshot.val();
-                if ("members" in data) {
-                  data["members"] = Object.values(data["members"]);
-                } else {
-                  data["members"] = [];
-                }
+                if (snapshot.exists()) {
+                  res.statusCode = 200;
+                  data = snapshot.val();
+                  if ("members" in data) {
+                    data["members"] = Object.values(data["members"]);
+                  } else {
+                    data["members"] = [];
+                  }
 
-                res.send({
-                  success: true,
-                  responseCode: 200,
-                  message: 'Group updated successfully',
-                  data: {group_details: data}
-                });
-                
-              } else {
-                res.statusCode = 200;
-                res.send({
-                  success: false,
-                  responseCode: 200,
-                  message: "User or group does not exist",
-                  data: {}
-                });
-              }
-            })
-          }
-        });
-        } else {
-          res.send({
-            success: false,
-            responseCode: 400,
-            message: "Group does not exist",
-            data: {}
+                  res.send({
+                    success: true,
+                    responseCode: 200,
+                    message: 'Group updated successfully',
+                    data: {group_details: data}
+                  });
+
+                } else {
+                  res.statusCode = 200;
+                  res.send({
+                    success: false,
+                    responseCode: 200,
+                    message: "User or group does not exist",
+                    data: {}
+                  });
+                }
+              })
+            }
           });
-        }
-      });
-    }
+} else {
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Group does not exist",
+    data: {}
   });
+}
+});
+}
+});
 });
 
 app.post("/addToGroup", (req, res, next) => {
@@ -1042,51 +1042,51 @@ app.post("/addToGroup", (req, res, next) => {
                    });
                   }
                 });
-                }
-              });
-            });
-          
-           rootRef.ref().child("users/" + userId + "/groups/" + groupId).get().then((snapshot) => {
-              if (snapshot.exists()) {
-                res.statusCode = 200;
-                data = snapshot.val();
-                if ("members" in data) {
-                  data["members"] = Object.values(data["members"]).concat(contactIds);
-                } else {
-                  data["members"] = contactIds;
-                }
-
-                res.send({
-                  success: true,
-                  responseCode: 200,
-                  message: 'Added to group successfully',
-                  data: {group_details: data}
-                });
-                
-              } else {
-                res.statusCode = 200;
-                res.send({
-                  success: false,
-                  responseCode: 200,
-                  message: "User or group does not exist",
-                  data: {}
-                });
               }
-            })
+            });
+});
 
-
-          
-          } else {
-          res.send({
-            success: false,
-            responseCode: 400,
-            message: "Group does not exist",
-            data: {}
-          });
-        }
-      });
+rootRef.ref().child("users/" + userId + "/groups/" + groupId).get().then((snapshot) => {
+  if (snapshot.exists()) {
+    res.statusCode = 200;
+    data = snapshot.val();
+    if ("members" in data) {
+      data["members"] = Object.values(data["members"]).concat(contactIds);
+    } else {
+      data["members"] = contactIds;
     }
+
+    res.send({
+      success: true,
+      responseCode: 200,
+      message: 'Added to group successfully',
+      data: {group_details: data}
+    });
+
+  } else {
+    res.statusCode = 200;
+    res.send({
+      success: false,
+      responseCode: 200,
+      message: "User or group does not exist",
+      data: {}
+    });
+  }
+})
+
+
+
+} else {
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Group does not exist",
+    data: {}
   });
+}
+});
+}
+});
 });
 
 app.post("/removeFromGroup", (req, res, next) => {
@@ -1124,7 +1124,7 @@ app.post("/removeFromGroup", (req, res, next) => {
                     data: {}
                   });
                 } else {
-                    rootRef.ref().child("users/" + userId + "/groups/" + groupId).get().then((snapshot) => {
+                  rootRef.ref().child("users/" + userId + "/groups/" + groupId).get().then((snapshot) => {
                     if (snapshot.exists()) {
                       res.statusCode = 200;
                       data = snapshot.val();
@@ -1151,19 +1151,19 @@ app.post("/removeFromGroup", (req, res, next) => {
                       });
                     }
                   })
-                }
-              });
-            }
-          });
-        } else {
-          res.send({
-            success: false,
-            responseCode: 400,
-            message: "Group does not exist",
-            data: {}
-          });
-        }
-      });
+}
+});
+}
+});
+} else {
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Group does not exist",
+    data: {}
+  });
+}
+});
 }
 });
 });
@@ -1346,11 +1346,11 @@ app.get("/getTemplateMessageList", (req, res, next) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
       res.send({
-      success: true,
-      responseCode: 200,
-      message: "Template messages found",
-      data: data
-    });
+        success: true,
+        responseCode: 200,
+        message: "Template messages found",
+        data: data
+      });
     } 
   }).catch((error) => {
     res.statusCode = 400;
@@ -1377,11 +1377,11 @@ app.get("/getMessageTranslationForUser", (req, res, next) => {
         if (snapshot.exists()) {
           const data = snapshot.val();
           res.send({
-          success: true,
-          responseCode: 200,
-          message: "Template message translation found",
-          data: data
-        });
+            success: true,
+            responseCode: 200,
+            message: "Template message translation found",
+            data: data
+          });
         } 
       }).catch((error) => {
         res.statusCode = 400;
@@ -1414,6 +1414,150 @@ app.get("/getMessageTranslationForUser", (req, res, next) => {
   });
 });
 
+app.post("/sendMessage", (req, res, next) => {
+  const userId = req.body.userId;
+  const message = req.body.message;
+  const phone = req.body.phone;
+  const countryCode = req.body.countryCode;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+
+      const accountSid = 'ACfd625c80670237064ee9dae1fc445844'; 
+      const authToken = '20cd501dad46526bbd84b799876143f4'; 
+      const client = require('twilio')(accountSid, authToken); 
+
+      client.messages 
+      .create({         
+       to: countryCode + phone,
+       body: message,
+       from: data["countryCode"] + data["phone"]
+     }) 
+      .then(message => {
+        if (message["errorMessage"] == null) {
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Message sent successfully",
+            data: {}
+          });
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: false,
+            responseCode: 200,
+            message: "Message could not be sent: " + message["errorMessage"],
+            data: {}
+          });
+        }
+      }) 
+      .done();
+
+
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Message could not be sent: " + error,
+      data: {}
+    });
+  });
+
+});
+
+app.post("/viewChatHistory", (req, res, next) => {
+  const userId = req.body.userId;
+  const contactId = req.body.contactId;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+
+      var userPhone =  data["countryCode"] + data["phone"];
+      var contactPhone;
+      if ("contacts" in data) {
+        if (contactId in data["contacts"]) {
+          contactPhone = data["contacts"][contactId]["countryCode"] + data["contacts"][contactId]["phone"];
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: false,
+            responseCode: 200,
+            message: "Contact does not exist",
+            data: {}
+          });
+        }
+      } else {
+       res.statusCode = 200;
+       res.send({
+        success: false,
+        responseCode: 200,
+        message: "Contact does not exist",
+        data: {}
+      });
+     }
+
+
+     const accountSid = 'ACfd625c80670237064ee9dae1fc445844'; 
+     const authToken = '20cd501dad46526bbd84b799876143f4'; 
+     const client = require('twilio')(accountSid, authToken); 
+     var messagesToReturn = [];
+
+     client.messages.list({limit: 20})
+     .then(messages => {
+        messages.forEach(m => {
+          messagesToReturn.push({
+            "body": m["body"],
+            "from": m["from"],
+            "to": m["to"],
+            "date": m["dateSent"]
+          });
+        });
+        res.statusCode = 200;
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: "Chat history found",
+          data: {messagesToReturn}
+        });
+      });
+
+
+   } else {
+    res.statusCode = 200;
+    res.send({
+      success: false,
+      responseCode: 200,
+      message: "User does not exist",
+      data: {}
+    });
+  }
+}).catch((error) => {
+  res.statusCode = 400;
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Chat history could not be found: " + error,
+    data: {}
+  });
+});
+
+});
+
 // app.post("/saveTemplateMessages", (req, res, next) => {
 
 //   var messages = [];
@@ -1421,7 +1565,7 @@ app.get("/getMessageTranslationForUser", (req, res, next) => {
 
 //   const xlsxFile = require('read-excel-file/node');
 //   var uuid = require('uuid');
- 
+
 //   xlsxFile('./messages.xlsx').then((rows) => {
 //    for (var i = 0; i < rows.length; i++) {
 //     var row = rows[i];
