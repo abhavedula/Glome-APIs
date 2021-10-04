@@ -544,54 +544,94 @@ app.get("/getRemainingContactsForGroups", (req, res, next) => {
 app.post("/createUserProfile", (req, res, next) => {
   const firstName = req.body.firstName;
   const lastName =  req.body.lastName;
-  const phone = req.body.phone;
-  const countryCode = req.body.countryCode;
   const email = req.body.email;
   const agencyName = req.body.agencyName;
   const password = req.body.password;
   const pushRef = rootRef.ref("users/").push();
-  pushRef.set({
-    id: pushRef.key,
-    firstName: firstName,
-    lastName: lastName,
-    phone: phone,
-    countryCode: countryCode,
-    email: email,
-    agencyName: agencyName,
-    password: password,
-    contacts: null
-  }, (error) => {
-    if (error) {
-      res.statusCode = 400;
-      res.send({
-        success: false,
-        responseCode: 400,
-        message: "Profile details not created: " + error,
-        data: {}
-      });
-    } else {
-     rootRef.ref().child("users/" + pushRef.key).get().then((snapshot) => {
-      if (snapshot.exists()) {
-        data = snapshot.val();
-        res.statusCode = 200;
-        res.send({
-          success: true,
-          responseCode: 200,
-          message: 'User created successfully',
-          data: { user_profile_details: {
-            id: data["id"],
-            firstName: data["firstName"],
-            lastName: data["lastName"],
-            email: data["email"],
-            agencyName: data["agencyName"],
-            phone: data["phone"],
-            countryCode: data["countryCode"]
-          }}
-        });
-      }
-    })
-   }
- });
+
+  rootRef.ref().get().then((snapshot) => {
+    if (snapshot.exists()) {
+      var error = false;
+      rootData = snapshot.val();
+
+
+      const accountSid = rootData["twilio"]["accountSid"];
+      const authToken = rootData["twilio"]["authToken"];
+      const client = require('twilio')(accountSid, authToken); 
+
+      client.availablePhoneNumbers('US')
+      .local
+      .list({limit: 1})
+      .then(local => local.forEach(l => {
+        const countryCode = "+1";
+        const phone = l["phoneNumber"].replace("+1","");
+
+        client.incomingPhoneNumbers
+        .create({phoneNumber: l["phoneNumber"]})
+        .then(incoming_phone_number => console.log(incoming_phone_number.sid));
+
+        pushRef.set({
+          id: pushRef.key,
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+          countryCode: countryCode,
+          email: email,
+          agencyName: agencyName,
+          password: password,
+          contacts: null
+        }, (error) => {
+          if (error) {
+            res.statusCode = 400;
+            res.send({
+              success: false,
+              responseCode: 400,
+              message: "User profile not created: " + error,
+              data: {}
+            });
+          } else {
+           rootRef.ref().child("users/" + pushRef.key).get().then((snapshot) => {
+            if (snapshot.exists()) {
+              data = snapshot.val();
+              res.statusCode = 200;
+              res.send({
+                success: true,
+                responseCode: 200,
+                message: 'User profile created successfully',
+                data: { user_profile_details: {
+                  id: data["id"],
+                  firstName: data["firstName"],
+                  lastName: data["lastName"],
+                  email: data["email"],
+                  agencyName: data["agencyName"],
+                  phone: data["phone"],
+                  countryCode: data["countryCode"]
+                }}
+              });
+            }
+          })
+         }
+       });
+}));
+
+} else {
+  res.statusCode = 200;
+  res.send({
+    success: false,
+    responseCode: 200,
+    message: "Data could not be found",
+    data: {}
+  });
+}
+}).catch((error) => {
+  res.statusCode = 400;
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Message could not be sent: " + error,
+    data: {}
+  });
+});
 });
 
 app.post("/createContact", (req, res, next) => {
@@ -1345,11 +1385,15 @@ app.get("/getTemplateMessageList", (req, res, next) => {
   rootRef.ref().child("templateMessages").get().then((snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
+      const finalData = {};
+      for (let d in data) {
+        finalData[d] = data[d]["English"];
+      }
       res.send({
         success: true,
         responseCode: 200,
         message: "Template messages found",
-        data: data
+        data: {"template_messages" : finalData}
       });
     } 
   }).catch((error) => {
@@ -1363,43 +1407,80 @@ app.get("/getTemplateMessageList", (req, res, next) => {
   });
 });
 
-app.get("/getMessageTranslationForUser", (req, res, next) => {
-  const userId = req.body.userId;
-  const messageTemplateId = req.body.messageTemplateId;
-  const contactId = req.body.contactId;
+app.get("/getTemplateMessageTranslationForUser", (req, res, next) => {
+  const userId = req.query.userId;
+  const messageTemplateId = req.query.messageTemplateId;
+  const contactId = req.query.contactId;
 
-  rootRef.ref().child("users/" + userId + "/contacts/" + contactId).get().then((snapshot) => {
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
 
-      rootRef.ref().child("templateMessages/" + messageTemplateId + "/" + data["language"]).get().then((snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          res.send({
-            success: true,
-            responseCode: 200,
-            message: "Template message translation found",
-            data: data
+      var agencyName = data["agencyName"];
+
+      var contactError = false;
+
+      if ("contacts" in data) {
+        if (contactId in data["contacts"]) {
+          var language = data["contacts"][contactId]["language"];
+          rootRef.ref().child("templateMessages").get().then((snapshot) => {
+            if (snapshot.exists()) {
+              const data2 = snapshot.val();
+              if ("edited" in data2) {
+                if (agencyName in data2["edited"]) {
+                  if (messageTemplateId in data2["edited"][agencyName]) {
+                    if (language in data2["edited"][agencyName][messageTemplateId]) {
+                      res.send({
+                        success: true,
+                        responseCode: 200,
+                        message: "Template message translation found",
+                        data: {"message_translation": {"message": data2["edited"][agencyName][messageTemplateId][language], "language": language}}
+                      });
+                    }
+                  }
+                }
+              }
+              res.send({
+                success: true,
+                responseCode: 200,
+                message: "Template message translation found",
+                data: {"message_translation": {"message": data2[messageTemplateId][language], "language": data["language"]}}
+              });
+            } 
+          }).catch((error) => {
+            res.statusCode = 400;
+            res.send({
+              success: false,
+              responseCode: 400,
+              message: "Template message translation not found: " + error,
+              data: {}
+            });
           });
-        } 
-      }).catch((error) => {
-        res.statusCode = 400;
+
+        } else {
+          contactError = true;
+        }
+      } else {
+        contactError = true;
+      }
+
+      if (contactError) {
+        res.statusCode = 200;
         res.send({
           success: false,
-          responseCode: 400,
-          message: "Template message translation not found: " + error,
+          responseCode: 200,
+          message: "Contact does not exist",
           data: {}
         });
-      });
-
+      }
 
     } else {
       res.statusCode = 200;
       res.send({
         success: false,
         responseCode: 200,
-        message: "User or contact do not exist",
+        message: "User does not exist",
         data: {}
       });
     }
@@ -1497,9 +1578,9 @@ app.post("/sendMessage", (req, res, next) => {
 
 });
 
-app.post("/viewChatHistory", (req, res, next) => {
-  const userId = req.body.userId;
-  const contactId = req.body.contactId;
+app.get("/viewChatHistory", (req, res, next) => {
+  const userId = req.query.userId;
+  const contactId = req.query.contactId;
 
   rootRef.ref().get().then((snapshot) => {
     if (snapshot.exists()) {
@@ -1508,74 +1589,74 @@ app.post("/viewChatHistory", (req, res, next) => {
 
       if ("users" in rootData) {
         if (userId in rootData["users"]) {
-            var data = rootData["users"][userId];
-            var userPhone =  data["countryCode"] + data["phone"];
-            var contactPhone;
-            if ("contacts" in data) {
-              if (contactId in data["contacts"]) {
-                contactPhone = data["contacts"][contactId]["countryCode"] + data["contacts"][contactId]["phone"];
-              } else {
-                res.statusCode = 200;
-                res.send({
-                  success: false,
-                  responseCode: 200,
-                  message: "Contact does not exist",
-                  data: {}
-                });
-              }
+          var data = rootData["users"][userId];
+          var userPhone =  data["countryCode"] + data["phone"];
+          var contactPhone;
+          if ("contacts" in data) {
+            if (contactId in data["contacts"]) {
+              contactPhone = data["contacts"][contactId]["countryCode"] + data["contacts"][contactId]["phone"];
             } else {
-             res.statusCode = 200;
-             res.send({
-              success: false,
-              responseCode: 200,
-              message: "Contact does not exist",
-              data: {}
-            });
-           }
-
-
-           const accountSid = rootData["twilio"]["accountSid"];
-           const authToken = rootData["twilio"]["authToken"];
-           const client = require('twilio')(accountSid, authToken); 
-           var messagesToReturn = [];
-
-           client.messages.list({limit: 20})
-           .then(messages => {
-              messages.forEach(m => {
-                messagesToReturn.push({
-                  "body": m["body"],
-                  "from": m["from"],
-                  "to": m["to"],
-                  "date": m["dateSent"]
-                });
-              });
               res.statusCode = 200;
               res.send({
-                success: true,
+                success: false,
                 responseCode: 200,
-                message: "Chat history found",
-                data: {messagesToReturn}
+                message: "Contact does not exist",
+                data: {}
               });
+            }
+          } else {
+           res.statusCode = 200;
+           res.send({
+            success: false,
+            responseCode: 200,
+            message: "Contact does not exist",
+            data: {}
+          });
+         }
+
+
+         const accountSid = rootData["twilio"]["accountSid"];
+         const authToken = rootData["twilio"]["authToken"];
+         const client = require('twilio')(accountSid, authToken); 
+         var messagesToReturn = [];
+
+         client.messages.list({limit: 20})
+         .then(messages => {
+          messages.forEach(m => {
+            messagesToReturn.push({
+              "body": m["body"],
+              "from": m["from"],
+              "to": m["to"],
+              "date": m["dateSent"]
             });
-
-        } else {
-          error = true;
-        } 
-      } else {
-        error = true;
-      }
-
-      if (error) {
-        res.statusCode = 200;
-        res.send({
-          success: false,
-          responseCode: 200,
-          message: "User does not exist",
-          data: {}
+          });
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Chat history found",
+            data: {messagesToReturn}
+          });
         });
-      }
 
-   } else {
+       } else {
+        error = true;
+      } 
+    } else {
+      error = true;
+    }
+
+    if (error) {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+
+  } else {
     res.statusCode = 200;
     res.send({
       success: false,
@@ -1593,6 +1674,107 @@ app.post("/viewChatHistory", (req, res, next) => {
     data: {}
   });
 });
+
+});
+
+app.post("/editTemplateMessageTranslation", (req, res, next) => {
+  const userId = req.body.userId;
+  const messageTemplateId = req.body.messageTemplateId;
+  const editedMessage = req.body.editedMessage;
+  const language = req.body.language;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+
+      var agencyName = data["agencyName"];
+
+      const ref = rootRef.ref("templateMessages/edited/" + agencyName + "/" + messageTemplateId);
+      ref.child(language).set(editedMessage, (error) => {
+        if (error) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Message could not be updated: " + error,
+            data: {}
+          });
+        } else {
+         res.statusCode = 200;
+         res.send({
+          success: true,
+          responseCode: 200,
+          message: "Message updated",
+          data: {}
+        });
+       }
+     });
+
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Message could not be updated: " + error,
+      data: {}
+    });
+  });
+});
+
+app.get("/getCustomMessageTranslationForUser", (req, res, next) => {
+  const userId = req.query.userId;
+  const message = req.query.message;
+  const contactId = req.query.contactId;
+
+  const translate = require("translate");
+
+  translate.engine = "google";
+  translate.key = process.env.DEEPL_KEY;
+
+  async function translateText(message, language) {
+    const text = await translate(message, language);
+    return text;
+  }
+
+  rootRef.ref().child("users/" + userId + "/contacts/" + contactId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+      var language = data["language"];
+
+      var translation = translateText(message, language);
+      translation.then(value => {
+        res.statusCode = 200;
+        res.send({
+          success: true,
+          responseCode: 200,
+          message: "Message was translated",
+          data: {"message_translation": {"message": value, "language": language}}
+        });
+      }).catch(err => {
+        res.status(500);
+      });
+      
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User or contact do not exist",
+        data: {}
+      });
+    }
+  });
 
 });
 
