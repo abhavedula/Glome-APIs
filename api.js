@@ -284,11 +284,14 @@ app.get("/getGroups", (req, res, next) => {
       }
       for (var i = 0; i < groups.length; i++) {
         if ("members" in groups[i]) {
-          groups[i]["members"] = Object.values(groups[i]["members"]);
-        } else {
+          var members = Object.values(groups[i]["members"]);  
           groups[i]["members"] = [];
-        }
+          for (var j = 0; j < members.length; j++) {
+             groups[i]["members"].push(data["contacts"][members[j]]);
+          }
+        } 
       }
+     
       res.send({
         success: true,
         responseCode: 200,
