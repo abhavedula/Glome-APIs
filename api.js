@@ -572,7 +572,7 @@ app.post("/createUserProfile", (req, res, next) => {
         // .then(incoming_phone_number => console.log(incoming_phone_number.sid));
 
         var phone = "3185088756";
-        
+
         pushRef.set({
           id: pushRef.key,
           firstName: firstName,
@@ -1626,12 +1626,14 @@ app.get("/viewChatHistory", (req, res, next) => {
          client.messages.list({limit: 20})
          .then(messages => {
           messages.forEach(m => {
-            messagesToReturn.push({
-              "body": m["body"],
-              "from": m["from"],
-              "to": m["to"],
-              "date": m["dateSent"]
-            });
+            if ((m["to"] == userPhone && m["from"] == contactPhone) || (m["to"] == contactPhone && m["from"] == userPhone)) {
+              messagesToReturn.push({
+                "body": m["body"],
+                "from": m["from"],
+                "to": m["to"],
+                "date": m["dateSent"]
+              });
+            }
           });
           res.statusCode = 200;
           res.send({
