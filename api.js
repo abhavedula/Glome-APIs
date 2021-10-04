@@ -564,12 +564,15 @@ app.post("/createUserProfile", (req, res, next) => {
       .list({limit: 1})
       .then(local => local.forEach(l => {
         const countryCode = "+1";
-        const phone = l["phoneNumber"].replace("+1","");
+        // const phone = l["phoneNumber"].replace("+1","");
 
-        client.incomingPhoneNumbers
-        .create({phoneNumber: l["phoneNumber"]})
-        .then(incoming_phone_number => console.log(incoming_phone_number.sid));
+        // Provision a phone number
+        // client.incomingPhoneNumbers
+        // .create({phoneNumber: l["phoneNumber"]})
+        // .then(incoming_phone_number => console.log(incoming_phone_number.sid));
 
+        var phone = "3185088756";
+        
         pushRef.set({
           id: pushRef.key,
           firstName: firstName,
