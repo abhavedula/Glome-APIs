@@ -4,14 +4,17 @@ const bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
-var firebase = require('firebase')
+var firebase = require('firebase');
+require('firebase/storage');
 
 var config = {
   apiKey: "AIzaSyCejVflI0Fdx3A2VGAApbqKTxi6ACL3I_s",
   authDomain: "glome-2bc31.firebaseapp.com",
+  databaseURL: "https://glome-2bc31-default-rtdb.firebaseio.com",
   projectId: "glome-2bc31",
   storageBucket: "glome-2bc31.appspot.com",
   messagingSenderId: "257542518832",
@@ -21,6 +24,18 @@ var config = {
 firebase.initializeApp(config);
 
 var rootRef = firebase.database();
+
+var admin = require("firebase-admin");
+
+var serviceAccount = require("./glome-327503-2124843b063d.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: 'glome-327503.appspot.com'
+});
+
+const bucket = admin.storage().bucket('glome-327503.appspot.com');
+
 
 app.get("/", (req, res, next) => {
   res.statusCode = 200;
@@ -101,20 +116,37 @@ app.get("/getUserProfileDetails", (req, res, next) => {
       res.statusCode = 200;
       data = snapshot.val();
       if (data["authToken"] == authToken) {
-        res.send({
-          success: true,
-          responseCode: 200,
-          message: "Profile details found successfully",
-          data: { user_profile_details: {
-            id: data["id"],
-            firstName: data["firstName"],
-            lastName: data["lastName"],
-            email: data["email"],
-            agencyName: data["agencyName"],
-            phone: data["phone"],
-            countryCode: data["countryCode"]
-          }}
+        const file = bucket.file(userId + '.png');
+        file.getSignedUrl({
+          action: 'read',
+          expires: '03-09-2491'
+        }).then(signedUrls => {
+           res.send({
+            success: true,
+            responseCode: 200,
+            message: "Profile details found successfully",
+            data: { user_profile_details: {
+              id: data["id"],
+              firstName: data["firstName"],
+              lastName: data["lastName"],
+              email: data["email"],
+              agencyName: data["agencyName"],
+              phone: data["phone"],
+              countryCode: data["countryCode"],
+              profilePic: signedUrls[0]
+            }}
+          });
+        }).catch((error) => {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Profile details not found: " + error,
+            data: {}
+          });
         });
+
+
       } else {
         res.statusCode = 400;
         res.send({
@@ -318,101 +350,6 @@ app.get("/getGroups", (req, res, next) => {
   });
 });
 
-// app.get("/getGroups", (req, res, next) => {
-//   const userId = req.query.userId;
-//   rootRef.ref().child("users/" + userId).get().then((snapshot) => {
-//     if (snapshot.exists()) {
-//       res.statusCode = 200;
-//       data = snapshot.val();
-//       groups = Object.values(data["groups"]);
-
-//       var memberDetails = {};
-//       const promises = [];
-
-
-//       for (var i = 0; i < groups.length; i++) {
-//         const members = Object.values(groups[i]["members"]);
-//         groups[i]["members"] = members
-//         var groupId = groups[i]["id"];
-
-
-//         //
-
-
-//         for (var j = 0; j < members.length; j++) {
-//           let promise = rootRef.ref().child("users/" + userId + "/contacts/" + members[j]).get()
-//           .then(snapshot2 => {
-//             if (snapshot2.empty) {
-//              res.statusCode = 400;
-//              res.send({
-//               success: false,
-//               responseCode: 400,
-//               message: error,
-//               data: {}
-//             });
-//            }
-
-//            data2 = snapshot2.val();
-//            details = {
-//             id: data2["id"],
-//             firstName: data2["firstName"],
-//             lastName: data2["lastName"],
-//             email: data2["email"],
-//             language: data2["language"],
-//             phone: data2["phone"],
-//           };
-//           if (groupId in memberDetails) {
-//             memberDetails[groupId].push(details);
-//           } else {
-//             memberDetails[groupId] = [];
-//             memberDetails[groupId].push(details);
-//           }
-//           return;
-//         })
-//           .catch(err => {
-//             console.log('Error getting documents', err);
-//           });
-//           promises.push(promise);
-//         }
-
-//         console.log(memberDetails);
-
-//         data["groups"][groupId]["members"] = memberDetails[groupId];
-//         //
-
-//       }
-
-//         Promise.all(promises).then(() => {
-//           res.send({
-//             success: true,
-//             responseCode: 200,
-//             message: "Groups found successfully",
-//             data: {groups: Object.values(data["groups"])}
-//           });
-//         }).catch(err => {
-//           response.status(500);
-//         });
-
-//     } else {
-//       res.statusCode = 200;
-//       res.send({
-//         success: false,
-//         responseCode: 200,
-//         message: "No data available",
-//         data: {}
-//       });
-//     }
-//   }).catch((error) => {
-//      console.log(error);
-//     res.statusCode = 400;
-//     res.send({
-//       success: false,
-//       responseCode: 400,
-//       message: error,
-//       data: {}
-//     });
-//   });
-// });
 
 app.get("/getGroupDetails", (req, res, next) => {
   const userId = req.query.userId;
@@ -804,6 +741,7 @@ app.post("/updateUserProfile", (req, res, next) => {
   const newEmail = req.body.newEmail;
   const newPhone = req.body.newPhone;
   const newCountryCode = req.body.newCountryCode;
+  const newProfilePic = req.body.newProfilePic;
 
   const ref = rootRef.ref("users/" + userId);
   ref.get().then((snapshot) => {
@@ -835,6 +773,8 @@ app.post("/updateUserProfile", (req, res, next) => {
       if (newAgencyName != null) {
         updates["agencyName"] = newAgencyName;
       }
+      
+
       ref.update(updates, (error) => {
         if (error) {
           res.statusCode = 400;
@@ -845,26 +785,43 @@ app.post("/updateUserProfile", (req, res, next) => {
             data: {}
           });
         } else {
-          rootRef.ref().child("users/" + userId).get().then((snapshot) => {
-            if (snapshot.exists()) {
-              data = snapshot.val();
-              res.statusCode = 200;
-              res.send({
-                success: true,
-                responseCode: 200,
-                message: 'User profile updated successfully',
-                data: { user_profile_details: {
-                  id: data["id"],
-                  firstName: data["firstName"],
-                  lastName: data["lastName"],
-                  email: data["email"],
-                  agencyName: data["agencyName"],
-                  phone: data["phone"],
-                  countryCode: data["countryCode"]
-                }}
+          if (newProfilePic != null) {
+            async function uploadFile() {
+              await bucket.upload(newProfilePic, {
+                destination: userId + ".png",
               });
             }
-          })
+          
+            uploadFile().then(() => {
+               const file = bucket.file(userId + '.png');
+                file.getSignedUrl({
+                  action: 'read',
+                  expires: '03-09-2491'
+                }).then(signedUrls => {
+                  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+                    if (snapshot.exists()) {
+                      data = snapshot.val();
+                      res.statusCode = 200;
+                      res.send({
+                        success: true,
+                        responseCode: 200,
+                        message: 'User profile updated successfully',
+                        data: { user_profile_details: {
+                          id: data["id"],
+                          firstName: data["firstName"],
+                          lastName: data["lastName"],
+                          email: data["email"],
+                          agencyName: data["agencyName"],
+                          phone: data["phone"],
+                          countryCode: data["countryCode"],
+                          profilePic: signedUrls[0]
+                        }}
+                      });
+                    }
+                  });
+                });
+            });
+          }
         }
       });
 }
