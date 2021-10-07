@@ -319,7 +319,9 @@ app.get("/getGroups", (req, res, next) => {
           var members = Object.values(groups[i]["members"]);  
           groups[i]["members"] = [];
           for (var j = 0; j < members.length; j++) {
-             groups[i]["members"].push(data["contacts"][members[j]]);
+             var m = data["contacts"][members[j]];
+             m["groups"] = Object.values(m["groups"]);
+             groups[i]["members"].push(m);
           }
         } 
       }
