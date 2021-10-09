@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
+const { google } = require("googleapis");
+const OAuth2 = google.auth.OAuth2;
 const jwt = require('jsonwebtoken');
 
 
@@ -1200,13 +1202,31 @@ app.post("/sendOTP", (req, res, next) => {
             // Email OTP
             rootRef.ref().child("mail").get().then((snapshot) => {
               if (snapshot.exists()) {
-                password = snapshot.val();
+                var data = snapshot.val();
+
+                var clientId = data["clientId"];
+                var clientSecret = data["clientSecret"];
+                var refreshToken = data["refreshToken"];
+
+                const oauth2Client = new OAuth2(
+                   clientId, // ClientID
+                   clientSecret, // Client Secret
+                   "https://developers.google.com/oauthplayground" // Redirect URL
+              );
+                oauth2Client.setCredentials({
+                   refresh_token: refreshToken
+              });
+              const accessToken = oauth2Client.getAccessToken()
 
                 var transporter = nodemailer.createTransport({
                   service: 'gmail',
                   auth: {
+                    type: "OAuth2",
                     user: 'glomeapp@gmail.com',
-                    pass: password
+                    clientId: clientId,
+                    clientSecret: clientSecret,
+                    refreshToken: refreshToken,
+                    accessToken: accessToken
                   }
                 });
 
