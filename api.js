@@ -123,59 +123,59 @@ app.get("/getUserProfileDetails", (req, res, next) => {
           action: 'read',
           expires: '03-09-2491'
         }).then(signedUrls => {
-           res.send({
-            success: true,
-            responseCode: 200,
-            message: "Profile details found successfully",
-            data: { user_profile_details: {
-              id: data["id"],
-              firstName: data["firstName"],
-              lastName: data["lastName"],
-              email: data["email"],
-              agencyName: data["agencyName"],
-              phone: data["phone"],
-              countryCode: data["countryCode"],
-              profilePic: signedUrls[0]
-            }}
-          });
-        }).catch((error) => {
-          res.statusCode = 400;
-          res.send({
-            success: false,
-            responseCode: 400,
-            message: "Profile details not found: " + error,
-            data: {}
-          });
+         res.send({
+          success: true,
+          responseCode: 200,
+          message: "Profile details found successfully",
+          data: { user_profile_details: {
+            id: data["id"],
+            firstName: data["firstName"],
+            lastName: data["lastName"],
+            email: data["email"],
+            agencyName: data["agencyName"],
+            phone: data["phone"],
+            countryCode: data["countryCode"],
+            profilePic: signedUrls[0]
+          }}
         });
-
-
-      } else {
+       }).catch((error) => {
         res.statusCode = 400;
         res.send({
           success: false,
           responseCode: 400,
-          message: "No authorization",
+          message: "Profile details not found: " + error,
           data: {}
         });
-      }
-    } else {
-      res.statusCode = 200;
+      });
+
+
+     } else {
+      res.statusCode = 400;
       res.send({
         success: false,
-        responseCode: 200,
-        message: "User does not exist",
+        responseCode: 400,
+        message: "No authorization",
         data: {}
       });
     }
-  }).catch((error) => {
-    res.statusCode = 400;
+  } else {
+    res.statusCode = 200;
     res.send({
       success: false,
-      responseCode: 400,
-      message: "Profile details not found: " + error,
+      responseCode: 200,
+      message: "User does not exist",
       data: {}
     });
+  }
+}).catch((error) => {
+  res.statusCode = 400;
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Profile details not found: " + error,
+    data: {}
   });
+});
 });
 
 app.get("/getContactDetails", (req, res, next) => {
@@ -321,37 +321,37 @@ app.get("/getGroups", (req, res, next) => {
           var members = Object.values(groups[i]["members"]);  
           groups[i]["members"] = [];
           for (var j = 0; j < members.length; j++) {
-             var m = data["contacts"][members[j]];
-             m["groups"] = Object.values(m["groups"]);
-             groups[i]["members"].push(m);
-          }
-        } 
-      }
+           var m = data["contacts"][members[j]];
+           m["groups"] = Object.values(m["groups"]);
+           groups[i]["members"].push(m);
+         }
+       } 
+     }
      
-      res.send({
-        success: true,
-        responseCode: 200,
-        message: "Groups found successfully",
-        data: {groups: groups}
-      });
-    } else {
-      res.statusCode = 200;
-      res.send({
-        success: false,
-        responseCode: 200,
-        message: "User does not exist",
-        data: {}
-      });
-    }
-  }).catch((error) => {
-    res.statusCode = 400;
+     res.send({
+      success: true,
+      responseCode: 200,
+      message: "Groups found successfully",
+      data: {groups: groups}
+    });
+   } else {
+    res.statusCode = 200;
     res.send({
       success: false,
-      responseCode: 400,
-      message: "Groups not found: " + error,
+      responseCode: 200,
+      message: "User does not exist",
       data: {}
     });
+  }
+}).catch((error) => {
+  res.statusCode = 400;
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Groups not found: " + error,
+    data: {}
   });
+});
 });
 
 
@@ -795,39 +795,39 @@ app.post("/updateUserProfile", (req, res, next) => {
                 destination: userId + ".png",
               });
             }
-          
+
             uploadFile().then(() => {
-               const file = bucket.file(userId + '.png');
-                file.getSignedUrl({
-                  action: 'read',
-                  expires: '03-09-2491'
-                }).then(signedUrls => {
-                  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
-                    if (snapshot.exists()) {
-                      data = snapshot.val();
-                      res.statusCode = 200;
-                      res.send({
-                        success: true,
-                        responseCode: 200,
-                        message: 'User profile updated successfully',
-                        data: { user_profile_details: {
-                          id: data["id"],
-                          firstName: data["firstName"],
-                          lastName: data["lastName"],
-                          email: data["email"],
-                          agencyName: data["agencyName"],
-                          phone: data["phone"],
-                          countryCode: data["countryCode"],
-                          profilePic: signedUrls[0]
-                        }}
-                      });
-                    }
+             const file = bucket.file(userId + '.png');
+             file.getSignedUrl({
+              action: 'read',
+              expires: '03-09-2491'
+            }).then(signedUrls => {
+              rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+                if (snapshot.exists()) {
+                  data = snapshot.val();
+                  res.statusCode = 200;
+                  res.send({
+                    success: true,
+                    responseCode: 200,
+                    message: 'User profile updated successfully',
+                    data: { user_profile_details: {
+                      id: data["id"],
+                      firstName: data["firstName"],
+                      lastName: data["lastName"],
+                      email: data["email"],
+                      agencyName: data["agencyName"],
+                      phone: data["phone"],
+                      countryCode: data["countryCode"],
+                      profilePic: signedUrls[0]
+                    }}
                   });
-                });
+                }
+              });
             });
-          }
-        }
-      });
+          });
+}
+}
+});
 }
 })
 });
@@ -1212,11 +1212,11 @@ app.post("/sendOTP", (req, res, next) => {
                    clientId, // ClientID
                    clientSecret, // Client Secret
                    "https://developers.google.com/oauthplayground" // Redirect URL
-              );
+                   );
                 oauth2Client.setCredentials({
-                   refresh_token: refreshToken
-              });
-              const accessToken = oauth2Client.getAccessToken()
+                 refresh_token: refreshToken
+               });
+                const accessToken = oauth2Client.getAccessToken()
 
                 var transporter = nodemailer.createTransport({
                   service: 'gmail',
@@ -1370,9 +1370,9 @@ app.get("/getTemplateMessageList", (req, res, next) => {
   rootRef.ref().child("templateMessages").get().then((snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
-      const finalData = {};
+      const finalData = [];
       for (let d in data) {
-        finalData[d] = data[d]["English"];
+        finalData.push({id: d, message: data[d]["English"]})
       }
       res.send({
         success: true,
@@ -1392,10 +1392,10 @@ app.get("/getTemplateMessageList", (req, res, next) => {
   });
 });
 
-app.get("/getTemplateMessageTranslationForUser", (req, res, next) => {
-  const userId = req.query.userId;
-  const messageTemplateId = req.query.messageTemplateId;
-  const contactId = req.query.contactId;
+app.get("/getTemplateMessageTranslationsForUsers", (req, res, next) => {
+  const userId = req.body.userId;
+  const messageTemplateId = req.body.messageTemplateId;
+  const contactIds = req.body.contactIds;
 
   rootRef.ref().child("users/" + userId).get().then((snapshot) => {
     if (snapshot.exists()) {
@@ -1404,61 +1404,56 @@ app.get("/getTemplateMessageTranslationForUser", (req, res, next) => {
 
       var agencyName = data["agencyName"];
 
-      var contactError = false;
+      var translatedMessages = [];
 
-      if ("contacts" in data) {
-        if (contactId in data["contacts"]) {
-          var language = data["contacts"][contactId]["language"];
-          rootRef.ref().child("templateMessages").get().then((snapshot) => {
-            if (snapshot.exists()) {
-              const data2 = snapshot.val();
-              if ("edited" in data2) {
-                if (agencyName in data2["edited"]) {
-                  if (messageTemplateId in data2["edited"][agencyName]) {
-                    if (language in data2["edited"][agencyName][messageTemplateId]) {
-                      res.send({
-                        success: true,
-                        responseCode: 200,
-                        message: "Template message translation found",
-                        data: {"message_translation": {"message": data2["edited"][agencyName][messageTemplateId][language], "language": language}}
-                      });
+      rootRef.ref().child("templateMessages").get().then((snapshot) => {
+        if (snapshot.exists()) {
+          const data2 = snapshot.val();
+          if ("edited" in data2) {
+            if (agencyName in data2["edited"]) {
+              if (messageTemplateId in data2["edited"][agencyName]) {
+
+                if ("contacts" in data) {
+                  for (var i = 0; i < contactIds.length; i++) {
+                    var contactId = contactIds[i];
+
+                    if (contactId in data["contacts"]) {
+                      var language = data["contacts"][contactId]["language"];
+                      if (language in data2["edited"][agencyName][messageTemplateId]) {
+                        translatedMessages.push({"contactId": contactId, "message": data2["edited"][agencyName][messageTemplateId][language], "language": language});
+
+                      }
                     }
                   }
+
                 }
+
               }
-              res.send({
-                success: true,
-                responseCode: 200,
-                message: "Template message translation found",
-                data: {"message_translation": {"message": data2[messageTemplateId][language], "language": data["language"]}}
-              });
-            } 
-          }).catch((error) => {
-            res.statusCode = 400;
-            res.send({
-              success: false,
-              responseCode: 400,
-              message: "Template message translation not found: " + error,
-              data: {}
-            });
+            }
+
+          } else {
+            for (var i = 0; i < contactIds.length; i++) {
+              var contactId = contactIds[i];
+              var language = data["contacts"][contactId]["language"];
+              translatedMessages.push({"contactId": contactId, "message": data2[messageTemplateId][language], "language": language});
+            }
+          }
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Template message translation found",
+            data: {"message_translation": translatedMessages}
           });
-
-        } else {
-          contactError = true;
-        }
-      } else {
-        contactError = true;
-      }
-
-      if (contactError) {
-        res.statusCode = 200;
+        } 
+      }).catch((error) => {
+        res.statusCode = 400;
         res.send({
           success: false,
-          responseCode: 200,
-          message: "Contact does not exist",
+          responseCode: 400,
+          message: "Template message translation not found: " + error,
           data: {}
         });
-      }
+      });
 
     } else {
       res.statusCode = 200;
@@ -1480,11 +1475,10 @@ app.get("/getTemplateMessageTranslationForUser", (req, res, next) => {
   });
 });
 
-app.post("/sendMessage", (req, res, next) => {
+app.post("/sendMessages", (req, res, next) => {
   const userId = req.body.userId;
-  const message = req.body.message;
-  const phone = req.body.phone;
-  const countryCode = req.body.countryCode;
+  const messages = req.body.messages;
+  const contactIds = req.body.contactIds;
 
   rootRef.ref().get().then((snapshot) => {
     if (snapshot.exists()) {
@@ -1499,32 +1493,55 @@ app.post("/sendMessage", (req, res, next) => {
           const authToken = rootData["twilio"]["authToken"];
           const client = require('twilio')(accountSid, authToken); 
 
-          client.messages 
-          .create({         
-           to: countryCode + phone,
-           body: message,
-           from: data["countryCode"] + data["phone"]
-         }) 
-          .then(message => {
-            if (message["errorMessage"] == null) {
-              res.statusCode = 200;
+          for (var i = 0; i < contactIds.length; i++) {
+            var contactId = contactIds[i];
+            if ("contacts" in rootData["users"][userId]) {
+              if (contactId in rootData["users"][userId]["contacts"]) {
+                var contactData = rootData["users"][userId]["contacts"][contactId];
+                var phone = contactData["countryCode"] + contactData["phone"];
+                client.messages 
+                .create({         
+                 to: phone,
+                 body: messages[i],
+                 from: data["countryCode"] + data["phone"]
+               }) 
+              }
+            }
+          }
+          res.statusCode = 200;
               res.send({
                 success: true,
                 responseCode: 200,
-                message: "Message sent successfully",
+                message: "Messages sent successfully",
                 data: {}
               });
-            } else {
-              res.statusCode = 200;
-              res.send({
-                success: false,
-                responseCode: 200,
-                message: "Message could not be sent: " + message["errorMessage"],
-                data: {}
-              });
-            }
-          }) 
-          .done();
+
+         //  client.messages 
+         //  .create({         
+         //   to: countryCode + phone,
+         //   body: message,
+         //   from: data["countryCode"] + data["phone"]
+         // }) 
+         //  .then(message => {
+         //    if (message["errorMessage"] == null) {
+         //      res.statusCode = 200;
+         //      res.send({
+         //        success: true,
+         //        responseCode: 200,
+         //        message: "Message sent successfully",
+         //        data: {}
+         //      });
+         //    } else {
+         //      res.statusCode = 200;
+         //      res.send({
+         //        success: false,
+         //        responseCode: 200,
+         //        message: "Message could not be sent: " + message["errorMessage"],
+         //        data: {}
+         //      });
+         //    }
+         //  }) 
+         //  .done();
         } else {
           error = true;
         }
@@ -1718,35 +1735,49 @@ app.post("/editTemplateMessageTranslation", (req, res, next) => {
   });
 });
 
-app.get("/getCustomMessageTranslationForUser", (req, res, next) => {
-  const userId = req.query.userId;
-  const message = req.query.message;
-  const contactId = req.query.contactId;
+app.get("/getCustomMessageTranslationsForUsers", (req, res, next) => {
+  const userId = req.body.userId;
+  const message = req.body.message;
+  const contactIds = req.body.contactIds;
 
   const translate = require("translate");
 
   translate.engine = "google";
   translate.key = process.env.DEEPL_KEY;
 
-  async function translateText(message, language) {
-    const text = await translate(message, language);
-    return text;
+  async function translateText(message, languages) {
+    var translations = [];
+    for (var i = 0; i < languages.length; i++) {
+      var language = languages[i]["language"];
+      const text = await translate(message, language);
+      languages[i]["message"] = text;
+      translations.push(languages[i]);
+    };
+    return translations;
   }
 
-  rootRef.ref().child("users/" + userId + "/contacts/" + contactId).get().then((snapshot) => {
+  rootRef.ref().child("users/" + userId + "/contacts").get().then((snapshot) => {
     if (snapshot.exists()) {
       res.statusCode = 200;
       data = snapshot.val();
-      var language = data["language"];
 
-      var translation = translateText(message, language);
+      var languages = [];
+
+      for (var i = 0; i < contactIds.length; i++) {
+        var contactId = contactIds[i];
+        if (contactId in data) {
+          languages.push({"contactId": contactId, "language": data[contactId]["language"]});
+        }
+      }
+      
+      var translation = translateText(message, languages);
       translation.then(value => {
         res.statusCode = 200;
         res.send({
           success: true,
           responseCode: 200,
           message: "Message was translated",
-          data: {"message_translation": {"message": value, "language": language}}
+          data: {"message_translation": value}
         });
       }).catch(err => {
         res.status(500);
@@ -1757,7 +1788,7 @@ app.get("/getCustomMessageTranslationForUser", (req, res, next) => {
       res.send({
         success: false,
         responseCode: 200,
-        message: "User or contact do not exist",
+        message: "User does not exist",
         data: {}
       });
     }
