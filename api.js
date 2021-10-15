@@ -1409,35 +1409,27 @@ app.get("/getTemplateMessageTranslationsForUsers", (req, res, next) => {
       rootRef.ref().child("templateMessages").get().then((snapshot) => {
         if (snapshot.exists()) {
           const data2 = snapshot.val();
-          if ("edited" in data2) {
-            if (agencyName in data2["edited"]) {
-              if (messageTemplateId in data2["edited"][agencyName]) {
 
-                if ("contacts" in data) {
-                  for (var i = 0; i < contactIds.length; i++) {
-                    var contactId = contactIds[i];
+          for (var i = 0; i < contactIds.length; i++) {
+            var contactId = contactIds[i];
+            if (contactId in data["contacts"]) {
+              var language = data["contacts"][contactId]["language"];
 
-                    if (contactId in data["contacts"]) {
-                      var language = data["contacts"][contactId]["language"];
-                      if (language in data2["edited"][agencyName][messageTemplateId]) {
-                        translatedMessages.push({"contactId": contactId, "message": data2["edited"][agencyName][messageTemplateId][language], "language": language});
+              if ("edited" in data2) {
+                if (agencyName in data2["edited"]) {
+                  if (messageTemplateId in data2["edited"][agencyName]) {
 
-                      }
+                    if (language in data2["edited"][agencyName][messageTemplateId]) {
+                      translatedMessages.push({"contactId": contactId, "message": data2["edited"][agencyName][messageTemplateId][language], "language": language});
+                    } else {
+                      translatedMessages.push({"contactId": contactId, "message": data2[messageTemplateId][language], "language": language});
                     }
-                  }
-
-                }
-
+                  } 
+                } 
               }
             }
-
-          } else {
-            for (var i = 0; i < contactIds.length; i++) {
-              var contactId = contactIds[i];
-              var language = data["contacts"][contactId]["language"];
-              translatedMessages.push({"contactId": contactId, "message": data2[messageTemplateId][language], "language": language});
-            }
           }
+
           res.send({
             success: true,
             responseCode: 200,
@@ -1710,7 +1702,7 @@ app.post("/editTemplateMessageTranslation", (req, res, next) => {
           success: true,
           responseCode: 200,
           message: "Message updated",
-          data: {}
+          data: {"edited_message": editedMessage}
         });
        }
      });
