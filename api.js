@@ -1392,7 +1392,7 @@ app.get("/getTemplateMessageList", (req, res, next) => {
   });
 });
 
-app.get("/getTemplateMessageTranslationsForUsers", (req, res, next) => {
+app.post("/getTemplateMessageTranslationsForUsers", (req, res, next) => {
   const userId = req.body.userId;
   const messageTemplateId = req.body.messageTemplateId;
   const contactIds = req.body.contactIds;
@@ -1727,7 +1727,7 @@ app.post("/editTemplateMessageTranslation", (req, res, next) => {
   });
 });
 
-app.get("/getCustomMessageTranslationsForUsers", (req, res, next) => {
+app.post("/getCustomMessageTranslationsForUsers", (req, res, next) => {
   const userId = req.body.userId;
   const message = req.body.message;
   const contactIds = req.body.contactIds;
