@@ -1816,6 +1816,18 @@ app.post("/getCustomMessageTranslationsForUsers", (req, res, next) => {
 //   })
 // });
 
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
+
+app.post('/sms', (req, res) => {
+  const twiml = new MessagingResponse();
+
+  twiml.message('message response');
+
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+});
+
+
 
 
 //Server
