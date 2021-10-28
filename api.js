@@ -1820,7 +1820,6 @@ const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 app.post('/sms', (req, res) => {
   res.writeHead(200, {'Content-Type': 'text/xml'});
-  res.end("Message received");
 });
 
 
