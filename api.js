@@ -1819,13 +1819,8 @@ app.post("/getCustomMessageTranslationsForUsers", (req, res, next) => {
 const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 app.post('/sms', (req, res) => {
-  res.statusCode = 200;
-  res.send({
-    success: true,
-    responseCode: 200,
-    message: "Message received",
-    data: {}
-  });
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end("Message received");
 });
 
 
