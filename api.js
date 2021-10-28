@@ -1614,7 +1614,7 @@ app.get("/viewChatHistory", (req, res, next) => {
          const client = require('twilio')(accountSid, authToken); 
          var messagesToReturn = [];
 
-         client.messages.list({limit: 20})
+         client.messages.list()
          .then(messages => {
           messages.forEach(m => {
             if ((m["to"] == userPhone && m["from"] == contactPhone) || (m["to"] == contactPhone && m["from"] == userPhone)) {
