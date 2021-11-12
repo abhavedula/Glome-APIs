@@ -119,36 +119,56 @@ app.get("/getUserProfileDetails", (req, res, next) => {
       data = snapshot.val();
       if (data["authToken"] == authToken) {
         const file = bucket.file(userId + '.png');
-        file.getSignedUrl({
-          action: 'read',
-          expires: '03-09-2491'
-        }).then(signedUrls => {
-         res.send({
-          success: true,
-          responseCode: 200,
-          message: "Profile details found successfully",
-          data: { user_profile_details: {
-            id: data["id"],
-            firstName: data["firstName"],
-            lastName: data["lastName"],
-            email: data["email"],
-            agencyName: data["agencyName"],
-            phone: data["phone"],
-            countryCode: data["countryCode"],
-            profilePic: signedUrls[0]
-          }}
-        });
-       }).catch((error) => {
-        res.statusCode = 400;
-        res.send({
-          success: false,
-          responseCode: 400,
-          message: "Profile details not found: " + error,
-          data: {}
-        });
-      });
-
-
+        file
+          .exists()
+          .then((exists) => {
+              if (exists[0]) {
+                file.getSignedUrl({
+                  action: 'read',
+                  expires: '03-09-2491'
+                }).then(signedUrls => {
+                 res.send({
+                  success: true,
+                  responseCode: 200,
+                  message: "Profile details found successfully",
+                  data: { user_profile_details: {
+                    id: data["id"],
+                    firstName: data["firstName"],
+                    lastName: data["lastName"],
+                    email: data["email"],
+                    agencyName: data["agencyName"],
+                    phone: data["phone"],
+                    countryCode: data["countryCode"],
+                    profilePic: signedUrls[0]
+                  }}
+                });
+               }).catch((error) => {
+                res.statusCode = 400;
+                res.send({
+                  success: false,
+                  responseCode: 400,
+                  message: "Profile details not found: " + error,
+                  data: {}
+                });
+              });
+            } else {
+              res.send({
+                  success: true,
+                  responseCode: 200,
+                  message: "Profile details found successfully",
+                  data: { user_profile_details: {
+                    id: data["id"],
+                    firstName: data["firstName"],
+                    lastName: data["lastName"],
+                    email: data["email"],
+                    agencyName: data["agencyName"],
+                    phone: data["phone"],
+                    countryCode: data["countryCode"]
+                  }}
+                });
+            }
+          });
+      
      } else {
       res.statusCode = 400;
       res.send({
@@ -1737,10 +1757,15 @@ app.post("/getCustomMessageTranslationsForUsers", (req, res, next) => {
   translate.engine = "google";
   translate.key = process.env.DEEPL_KEY;
 
+  const unsupportedLanguages = ["Dari", "Tigrinya"];
+
   async function translateText(message, languages) {
     var translations = [];
     for (var i = 0; i < languages.length; i++) {
       var language = languages[i]["language"];
+      if (unsupportedLanguages.includes(language)) {
+        return "Custom translations are not supported for " + language;
+      }
       const text = await translate(message, language);
       languages[i]["message"] = text;
       translations.push(languages[i]);
