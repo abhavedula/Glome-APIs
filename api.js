@@ -1766,8 +1766,9 @@ app.post("/getCustomMessageTranslationsForUsers", (req, res, next) => {
       var text = '';
       if (unsupportedLanguages.includes(language)) {
         text = "Custom translations are not supported for " + language;
+      } else {      
+        text = await translate(message, language);
       }
-      text = await translate(message, language);
       languages[i]["message"] = text;
       translations.push(languages[i]);
     };
