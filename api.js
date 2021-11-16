@@ -1763,10 +1763,11 @@ app.post("/getCustomMessageTranslationsForUsers", (req, res, next) => {
     var translations = [];
     for (var i = 0; i < languages.length; i++) {
       var language = languages[i]["language"];
+      const text = '';
       if (unsupportedLanguages.includes(language)) {
-        return "Custom translations are not supported for " + language;
+        text = "Custom translations are not supported for " + language;
       }
-      const text = await translate(message, language);
+      text = await translate(message, language);
       languages[i]["message"] = text;
       translations.push(languages[i]);
     };
