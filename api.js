@@ -1763,7 +1763,7 @@ app.post("/getCustomMessageTranslationsForUsers", (req, res, next) => {
     var translations = [];
     for (var i = 0; i < languages.length; i++) {
       var language = languages[i]["language"];
-      const text = '';
+      var text = '';
       if (unsupportedLanguages.includes(language)) {
         text = "Custom translations are not supported for " + language;
       }
