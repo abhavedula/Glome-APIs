@@ -1435,17 +1435,22 @@ app.post("/getTemplateMessageTranslationsForUsers", (req, res, next) => {
             if (contactId in data["contacts"]) {
               var language = data["contacts"][contactId]["language"];
 
+              var translationFound = false;
+
               if ("edited" in data2) {
                 if (agencyName in data2["edited"]) {
                   if (messageTemplateId in data2["edited"][agencyName]) {
 
                     if (language in data2["edited"][agencyName][messageTemplateId]) {
                       translatedMessages.push({"contactId": contactId, "message": data2["edited"][agencyName][messageTemplateId][language], "language": language});
-                    } else {
-                      translatedMessages.push({"contactId": contactId, "message": data2[messageTemplateId][language], "language": language});
+                      translationFound = true;
                     }
                   } 
                 } 
+              }
+
+              if (!translationFound) {
+                translatedMessages.push({"contactId": contactId, "message": data2[messageTemplateId][language], "language": language});
               }
             }
           }
