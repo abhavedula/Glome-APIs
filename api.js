@@ -904,7 +904,7 @@ app.post("/editContact", (req, res, next) => {
               res.send({
                 success: false,
                 responseCode: 400,
-                message: "Contact not updatetd: " + error,
+                message: "Contact not updated: " + error,
                 data: {}
               });
             } else {
@@ -1855,6 +1855,216 @@ const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 app.post('/sms', (req, res) => {
   res.writeHead(200, {'Content-Type': 'text/xml'});
+});
+
+app.post("/createMapPin", (req, res, next) => {
+  const userId = req.body.userId;
+  const lat = req.body.latitude;
+  const lng = req.body.longitude;
+  const address = req.body.address;
+  const description = req.body.description;
+
+  rootRef.ref().child("users/" + userId + "/").get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+
+      var agencyName = data["agencyName"];
+
+      const ref = rootRef.ref("mapPins/" + agencyName + "/").push();
+      const pin = {
+        "createdBy": userId,
+        "latitude": lat,
+        "longitude": lng,
+        "address": address,
+        "description": description,
+        "shareLink": "https://maps.google.com/?q=" + lat + "," + lng,
+        "id": ref.key,
+      };
+      ref.set(pin, (error) => {
+        if (error) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Pin could not be created: " + error,
+            data: {}
+          });
+        } else {
+         res.statusCode = 200;
+         res.send({
+          success: true,
+          responseCode: 200,
+          message: "Pin created",
+          data: {"added_pin": pin}
+        });
+       }
+     });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Pin could not be created: " + error,
+      data: {}
+    });
+  });
+
+}); 
+
+app.post("/editMapPin", (req, res, next) => {
+  const userId = req.body.userId;
+  const pinId = req.body.pinId;
+  const newLat = req.body.newLatitude;
+  const newLng = req.body.newLongitude;
+  const newAddress = req.body.newAddress;
+  const newDescription = req.body.newDescription;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+
+      var agencyName = data["agencyName"];
+
+      rootRef.ref().child("mapPins/" + agencyName + "/" + pinId).get().then((snapshot) => {
+        if (!snapshot.exists()) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Pin does not exist",
+            data: {}
+          });
+        } else {
+          const ref = rootRef.ref("mapPins/" + agencyName + "/" + pinId);
+          ref.once('value', function(snapshot) {
+            if (snapshot.exists()) {
+              const updates = {};
+              if (newLat != null) {
+                updates["latitude"] = newLat;
+              }
+              if (newLng != null) {
+                updates["longitude"] = newLng;
+              }
+              if (newAddress != null) {
+                updates["address"] = newAddress;
+              }
+              if (newDescription != null) {
+                updates["description"] = newDescription;
+              }
+              ref.update(updates, (error) => {
+                if (error) {
+                  res.statusCode = 400;
+                  res.send({
+                    success: false,
+                    responseCode: 400,
+                    message: "Pin not updated: " + error,
+                    data: {}
+                  });
+                } else {
+                  rootRef.ref().child("mapPins/" + agencyName + "/" + pinId).get().then((snapshot) => {
+                    if (snapshot.exists()) {
+                      res.statusCode = 200;
+                      data = snapshot.val();
+
+                      res.send({
+                        success: true,
+                        responseCode: 200,
+                        message: 'Contact updated successfully',
+                        data: {"pin_details": data}
+                      });
+                    }
+                  })
+                }
+              });
+            } else {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "Pin does not exist",
+                data: {}
+              });
+            }
+          });
+        }
+      })
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Pin could not be updated: " + error,
+      data: {}
+    });
+  });
+});
+
+
+app.get("/getListOfMapPins", (req, res, next) => {
+  const userId = req.query.userId;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const agencyName = data["agencyName"];
+        rootRef.ref().child("mapPins/" + agencyName + "/").get().then((snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            res.send({
+              success: true,
+              responseCode: 200,
+              message: "Pins found",
+              data: {"pins" : Object.values(data)}
+            });
+          } 
+        }).catch((error) => {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Pins not found: " + error,
+            data: {}
+          });
+        });
+      
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Pins could not be found: " + error,
+      data: {}
+    });
+  });
+
 });
 
 
