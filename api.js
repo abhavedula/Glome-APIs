@@ -2433,9 +2433,7 @@ app.post("/editAppointment", (req, res, next) => {
           event.location = newLocation;
         }
         if (newFrequency != null) {
-          event.recurrence = [
-            newFrequency
-          ];
+          event.recurrence = newFrequency;
         }
 
         calendar.events.patch({
