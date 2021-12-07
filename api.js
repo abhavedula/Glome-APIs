@@ -2072,7 +2072,6 @@ app.get("/getListOfMapPins", (req, res, next) => {
 /*  PASSPORT SETUP  */
 
 const passport = require('passport');
-var userProfile;
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -2109,8 +2108,8 @@ var GOOGLE_CLIENT_ID = '';
 var GOOGLE_CLIENT_SECRET = '';
 var oauth2Client;
 
-const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
-const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
+const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/";
+const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback";
 
 
 rootRef.ref().child("mail/").get().then((snapshot) => {
@@ -2132,12 +2131,7 @@ rootRef.ref().child("mail/").get().then((snapshot) => {
           callbackURL: GOOGLE_AUTH_CALLBACK,
         },
         function(accessToken, refreshToken, profile, done) {
-            userProfile=profile;
-            console.log(accessToken);
-            console.log(refreshToken);
             var email = profile["emails"][0]["value"];
-
-            
 
             var query = firebase.database().ref("users");
             query.once("value")
@@ -2159,7 +2153,7 @@ rootRef.ref().child("mail/").get().then((snapshot) => {
                       });
                     }
                   });
-                  return done(null, userProfile);
+                  return done(null, "Glome was given access to your Google Calendar");
                 } 
 
               });
