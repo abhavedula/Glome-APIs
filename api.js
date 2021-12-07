@@ -2108,8 +2108,8 @@ var GOOGLE_CLIENT_ID = '';
 var GOOGLE_CLIENT_SECRET = '';
 var oauth2Client;
 
-const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/";
-const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback";
+const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
+const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
 
 
 rootRef.ref().child("mail/").get().then((snapshot) => {
@@ -2295,33 +2295,6 @@ app.post("/createAppointment", (req, res, next) => {
         });
 
         const calendar = google.calendar({version: 'v3', auth: oauth2Client});
-        // var event = {
-        //   'summary': 'Glome',
-        //   'location': '800 Howard St., San Francisco, CA 94103',
-        //   'description': 'A chance to hear more about Google\'s developer products.',
-        //   'start': {
-        //     'dateTime': '2021-12-12T09:00:00-07:00',
-        //     'timeZone': 'America/Los_Angeles',
-        //   },
-        //   'end': {
-        //     'dateTime': '2021-12-12T17:00:00-07:00',
-        //     'timeZone': 'America/Los_Angeles',
-        //   },
-        //   'recurrence': [
-        //     'RRULE:FREQ=DAILY;COUNT=2'
-        //   ],
-        //   'attendees': [
-        //     {'email': 'lpage@example.com'},
-        //     {'email': 'sbrin@example.com'},
-        //   ],
-        //   'reminders': {
-        //     'useDefault': false,
-        //     'overrides': [
-        //       {'method': 'email', 'minutes': 24 * 60},
-        //       {'method': 'popup', 'minutes': 10},
-        //     ],
-        //   },
-        // };
 
         var event = {
           'summary': subject,
@@ -2329,9 +2302,7 @@ app.post("/createAppointment", (req, res, next) => {
           'description': note,
           'start': start,
           'end': end,
-          'recurrence': [
-            frequency
-          ],
+          'recurrence': frequency,
           'attendees': [
             {'email': contactEmail},
           ],
