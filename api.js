@@ -2108,8 +2108,8 @@ var GOOGLE_CLIENT_ID = '';
 var GOOGLE_CLIENT_SECRET = '';
 var oauth2Client;
 
-const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
-const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
+const GOOGLE_AUTH = "http://localhost:8000/auth/google/" //https://glome-api.herokuapp.com/auth/google/"
+const GOOGLE_AUTH_CALLBACK = "http://localhost:8000/auth/google/callback" //"https://glome-api.herokuapp.com/auth/google/callback"
 
 
 rootRef.ref().child("mail/").get().then((snapshot) => {
@@ -2258,6 +2258,16 @@ app.get("/getAppointments", (req, res, next) => {
       });
     }
   }).catch((error) => {
+    if (error == "invalid_grant") {
+      // OAuth prompt
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "You need to give Glome access to your Google calendar to use this feature.",
+        data: {"link": GOOGLE_AUTH}
+      });
+    }
     res.statusCode = 400;
     res.send({
       success: false,
@@ -2368,6 +2378,16 @@ app.post("/createAppointment", (req, res, next) => {
       });
     }
   }).catch((error) => {
+    if (error == "invalid_grant") {
+      // OAuth prompt
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "You need to give Glome access to your Google calendar to use this feature.",
+        data: {"link": GOOGLE_AUTH}
+      });
+    }
     res.statusCode = 400;
     res.send({
       success: false,
@@ -2494,6 +2514,16 @@ app.post("/editAppointment", (req, res, next) => {
       });
     }
   }).catch((error) => {
+    if (error == "invalid_grant") {
+      // OAuth prompt
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "You need to give Glome access to your Google calendar to use this feature.",
+        data: {"link": GOOGLE_AUTH}
+      });
+    }
     res.statusCode = 400;
     res.send({
       success: false,
