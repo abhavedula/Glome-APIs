@@ -2108,8 +2108,8 @@ var GOOGLE_CLIENT_ID = '';
 var GOOGLE_CLIENT_SECRET = '';
 var oauth2Client;
 
-const GOOGLE_AUTH = "http://localhost:8000/auth/google/" //https://glome-api.herokuapp.com/auth/google/"
-const GOOGLE_AUTH_CALLBACK = "http://localhost:8000/auth/google/callback" //"https://glome-api.herokuapp.com/auth/google/callback"
+const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
+const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
 
 
 rootRef.ref().child("mail/").get().then((snapshot) => {
@@ -2205,37 +2205,39 @@ app.get("/getAppointments", (req, res, next) => {
           orderBy: 'startTime',
         }, (err, response) => {
           if (err) {
+            // OAuth prompt
             res.statusCode = 200;
             res.send({
               success: false,
               responseCode: 200,
-              message: "Calendar appointments could not be found: " + err,
-              data: {}
+              message: "You need to give Glome access to your Google calendar to use this feature.",
+              data: {"link": GOOGLE_AUTH}
+            });
+          } else {
+            const items = response.data.items;
+            var events = [];
+            for (var i = 0; i < items.length; i++) {
+              var item = items[i];
+              events.push({
+                id: item["id"],
+                subject: item["summary"],
+                note: item["description"],
+                location: item["location"],
+                start: item["start"],
+                end: item["end"],
+                link: item["htmlLink"],
+                attendees: item["attendees"],
+                frequency: item["recurrence"]
+              });
+            } 
+            res.statusCode = 200;
+            res.send({
+              success: true,
+              responseCode: 200,
+              message: "Calendar appointments found successfully",
+              data: {"appointments": events}
             });
           }
-          const items = response.data.items;
-          var events = [];
-          for (var i = 0; i < items.length; i++) {
-            var item = items[i];
-            events.push({
-              id: item["id"],
-              subject: item["summary"],
-              note: item["description"],
-              location: item["location"],
-              start: item["start"],
-              end: item["end"],
-              link: item["htmlLink"],
-              attendees: item["attendees"],
-              frequency: item["recurrence"]
-            });
-          } 
-          res.statusCode = 200;
-          res.send({
-            success: true,
-            responseCode: 200,
-            message: "Calendar appointments found successfully",
-            data: {"appointments": events}
-          });
         });
       } else {
         // OAuth prompt
@@ -2258,16 +2260,6 @@ app.get("/getAppointments", (req, res, next) => {
       });
     }
   }).catch((error) => {
-    if (error == "invalid_grant") {
-      // OAuth prompt
-      res.statusCode = 200;
-      res.send({
-        success: false,
-        responseCode: 200,
-        message: "You need to give Glome access to your Google calendar to use this feature.",
-        data: {"link": GOOGLE_AUTH}
-      });
-    }
     res.statusCode = 400;
     res.send({
       success: false,
@@ -2327,12 +2319,13 @@ app.post("/createAppointment", (req, res, next) => {
           resource: event,
         }, function(err, event) {
           if (err) {
-            res.statusCode = 400;
+            // OAuth prompt
+            res.statusCode = 200;
             res.send({
               success: false,
-              responseCode: 400,
-              message: "Appointment could not be created: " + err,
-              data: {}
+              responseCode: 200,
+              message: "You need to give Glome access to your Google calendar to use this feature.",
+              data: {"link": GOOGLE_AUTH}
             });
           } else {
             var item = event["data"];
@@ -2378,16 +2371,6 @@ app.post("/createAppointment", (req, res, next) => {
       });
     }
   }).catch((error) => {
-    if (error == "invalid_grant") {
-      // OAuth prompt
-      res.statusCode = 200;
-      res.send({
-        success: false,
-        responseCode: 200,
-        message: "You need to give Glome access to your Google calendar to use this feature.",
-        data: {"link": GOOGLE_AUTH}
-      });
-    }
     res.statusCode = 400;
     res.send({
       success: false,
@@ -2463,12 +2446,13 @@ app.post("/editAppointment", (req, res, next) => {
           resource: event,
         }, function(err, event) {
           if (err) {
-            res.statusCode = 400;
+            // OAuth prompt
+            res.statusCode = 200;
             res.send({
               success: false,
-              responseCode: 400,
-              message: "Appointment could not be updated: " + err,
-              data: {}
+              responseCode: 200,
+              message: "You need to give Glome access to your Google calendar to use this feature.",
+              data: {"link": GOOGLE_AUTH}
             });
           } else {
             res.statusCode = 200;
@@ -2514,16 +2498,6 @@ app.post("/editAppointment", (req, res, next) => {
       });
     }
   }).catch((error) => {
-    if (error == "invalid_grant") {
-      // OAuth prompt
-      res.statusCode = 200;
-      res.send({
-        success: false,
-        responseCode: 200,
-        message: "You need to give Glome access to your Google calendar to use this feature.",
-        data: {"link": GOOGLE_AUTH}
-      });
-    }
     res.statusCode = 400;
     res.send({
       success: false,
