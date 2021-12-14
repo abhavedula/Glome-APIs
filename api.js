@@ -2090,7 +2090,7 @@ app.get('/success', (req, res) => {
     res.send({
       success: true,
       responseCode: 200,
-      message: "Glome has access to your calendar for the account: " + accountEmail,
+      message: "Glome has access to your calendar.",
       data: {}
     });
 });
@@ -2119,6 +2119,9 @@ var oauth2Client;
 
 const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
 const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
+
+// const GOOGLE_AUTH = "http://localhost:8000/auth/google/"
+// const GOOGLE_AUTH_CALLBACK = "http://localhost:8000/auth/google/callback"
 
 
 rootRef.ref().child("mail/").get().then((snapshot) => {
@@ -2226,7 +2229,7 @@ app.get("/getAppointments", (req, res, next) => {
                       });
                     }
                   });
-                  break;
+                  return;
                 } 
 
               });
@@ -2249,6 +2252,7 @@ app.get("/getAppointments", (req, res, next) => {
           message: "You need to give Glome access to your Google calendar to use this feature.",
           data: {"link": GOOGLE_AUTH}
         });
+        return;
       }
 
        const calendar = google.calendar({version: 'v3', auth: oauth2Client});
@@ -2335,13 +2339,59 @@ app.post("/createAppointment", (req, res, next) => {
         const accessToken = data["calendar"]["accessToken"];
         const refreshToken = data["calendar"]["refreshToken"];
         
+        oauth2Client.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+      } else if (data["email"] in calendarTokens) {
+            var query = firebase.database().ref("users");
+            query.once("value")
+            .then(function(snapshot) {
+              snapshot.forEach(function(childSnapshot) {
+                var key = childSnapshot.key;
+                var data2 = childSnapshot.val();
 
+                if (data["email"] == data2["email"]) {
+                  var userId = data["id"];
+                    const ref = rootRef.ref("users/" + userId);
+                    ref.get().then((snapshot) => {
+                      if (snapshot.exists()) {
+                        var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
+                        ref.update(updates, (error) => {
+                          if (error) {
+                            console.log(error);
+                          } 
+                      });
+                    }
+                  });
+                  return;
+                } 
+
+              });
+          });
+
+        const accessToken = calendarTokens[data["email"]]["accessToken"];
+        const refreshToken = calendarTokens[data["email"]]["refreshToken"];
+        
         oauth2Client.setCredentials({
           access_token: accessToken,
           refresh_token: refreshToken
         });
 
-        const calendar = google.calendar({version: 'v3', auth: oauth2Client});
+      } else {
+        // OAuth prompt
+        res.statusCode = 200;
+        res.send({
+          success: false,
+          responseCode: 200,
+          message: "You need to give Glome access to your Google calendar to use this feature.",
+          data: {"link": GOOGLE_AUTH}
+        });
+        return;
+
+      }
+
+      const calendar = google.calendar({version: 'v3', auth: oauth2Client});
 
         var event = {
           'summary': subject,
@@ -2395,17 +2445,7 @@ app.post("/createAppointment", (req, res, next) => {
             });
           }
         });
-      } else {
-        // OAuth prompt
-        res.statusCode = 200;
-        res.send({
-          success: false,
-          responseCode: 200,
-          message: "You need to give Glome access to your Google calendar to use this feature.",
-          data: {"link": GOOGLE_AUTH}
-        });
 
-      }
     } else {
       res.statusCode = 200;
       res.send({
@@ -2452,8 +2492,54 @@ app.post("/editAppointment", (req, res, next) => {
           access_token: accessToken,
           refresh_token: refreshToken
         });
+      } else if (data["email"] in calendarTokens) {
+            var query = firebase.database().ref("users");
+            query.once("value")
+            .then(function(snapshot) {
+              snapshot.forEach(function(childSnapshot) {
+                var key = childSnapshot.key;
+                var data2 = childSnapshot.val();
 
-        const calendar = google.calendar({version: 'v3', auth: oauth2Client});
+                if (data["email"] == data2["email"]) {
+                  var userId = data["id"];
+                    const ref = rootRef.ref("users/" + userId);
+                    ref.get().then((snapshot) => {
+                      if (snapshot.exists()) {
+                        var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
+                        ref.update(updates, (error) => {
+                          if (error) {
+                            console.log(error);
+                          } 
+                      });
+                    }
+                  });
+                  return;
+                } 
+
+              });
+          });
+
+        const accessToken = calendarTokens[data["email"]]["accessToken"];
+        const refreshToken = calendarTokens[data["email"]]["refreshToken"];
+        
+        oauth2Client.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+       
+      } else {
+        // OAuth prompt
+        res.statusCode = 200;
+        res.send({
+          success: false,
+          responseCode: 200,
+          message: "You need to give Glome access to your Google calendar to use this feature.",
+          data: {"link": GOOGLE_AUTH}
+        });
+        return;
+      }
+
+       const calendar = google.calendar({version: 'v3', auth: oauth2Client});
         var event = calendar.events.get({
           auth: oauth2Client,
           calendarId: data["email"], 
@@ -2522,17 +2608,6 @@ app.post("/editAppointment", (req, res, next) => {
             });
           }
         });
-      } else {
-        // OAuth prompt
-        res.statusCode = 200;
-        res.send({
-          success: false,
-          responseCode: 200,
-          message: "You need to give Glome access to your Google calendar to use this feature.",
-          data: {"link": GOOGLE_AUTH}
-        });
-
-      }
     } else {
       res.statusCode = 200;
       res.send({
