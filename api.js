@@ -2037,7 +2037,14 @@ app.get("/getListOfMapPins", (req, res, next) => {
               message: "Pins found",
               data: {"pins" : Object.values(data)}
             });
-          } 
+          } else {
+            res.send({
+              success: true,
+              responseCode: 200,
+              message: "Pins found",
+              data: {"pins" : []}
+            });
+          }
         }).catch((error) => {
           res.statusCode = 400;
           res.send({
@@ -2076,12 +2083,14 @@ const passport = require('passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
+var accountEmail = '';
+
 app.get('/success', (req, res) => {
   res.statusCode = 200;
     res.send({
       success: true,
       responseCode: 200,
-      message: "Glome has access to your calendar",
+      message: "Glome has access to your calendar for the account: " + accountEmail,
       data: {}
     });
 });
@@ -2132,6 +2141,7 @@ rootRef.ref().child("mail/").get().then((snapshot) => {
         },
         function(accessToken, refreshToken, profile, done) {
             var email = profile["emails"][0]["value"];
+            accountEmail = email;
 
             var query = firebase.database().ref("users");
             query.once("value")
