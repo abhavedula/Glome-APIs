@@ -2083,7 +2083,7 @@ const passport = require('passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
-var accountEmail = '';
+var calendarTokens = {};
 
 app.get('/success', (req, res) => {
   res.statusCode = 200;
@@ -2141,7 +2141,7 @@ rootRef.ref().child("mail/").get().then((snapshot) => {
         },
         function(accessToken, refreshToken, profile, done) {
             var email = profile["emails"][0]["value"];
-            accountEmail = email;
+            calendarTokens[email] = {"accessToken": accessToken, "refreshToken": refreshToken};
 
             var query = firebase.database().ref("users");
             query.once("value")
@@ -2205,8 +2205,53 @@ app.get("/getAppointments", (req, res, next) => {
           access_token: accessToken,
           refresh_token: refreshToken
         });
+      } else if (data["email"] in calendarTokens) {
+            var query = firebase.database().ref("users");
+            query.once("value")
+            .then(function(snapshot) {
+              snapshot.forEach(function(childSnapshot) {
+                var key = childSnapshot.key;
+                var data2 = childSnapshot.val();
 
-        const calendar = google.calendar({version: 'v3', auth: oauth2Client});
+                if (data["email"] == data2["email"]) {
+                  var userId = data["id"];
+                    const ref = rootRef.ref("users/" + userId);
+                    ref.get().then((snapshot) => {
+                      if (snapshot.exists()) {
+                        var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
+                        ref.update(updates, (error) => {
+                          if (error) {
+                            console.log(error);
+                          } 
+                      });
+                    }
+                  });
+                  break;
+                } 
+
+              });
+          });
+
+        const accessToken = calendarTokens[data["email"]]["accessToken"];
+        const refreshToken = calendarTokens[data["email"]]["refreshToken"];
+        
+        oauth2Client.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+
+      } else {
+        // OAuth prompt
+        res.statusCode = 200;
+        res.send({
+          success: false,
+          responseCode: 200,
+          message: "You need to give Glome access to your Google calendar to use this feature.",
+          data: {"link": GOOGLE_AUTH}
+        });
+      }
+
+       const calendar = google.calendar({version: 'v3', auth: oauth2Client});
         calendar.events.list({
           calendarId: data["email"],
           timeMin: (new Date()).toISOString(),
@@ -2249,17 +2294,7 @@ app.get("/getAppointments", (req, res, next) => {
             });
           }
         });
-      } else {
-        // OAuth prompt
-        res.statusCode = 200;
-        res.send({
-          success: false,
-          responseCode: 200,
-          message: "You need to give Glome access to your Google calendar to use this feature.",
-          data: {"link": GOOGLE_AUTH}
-        });
 
-      }
     } else {
       res.statusCode = 200;
       res.send({
