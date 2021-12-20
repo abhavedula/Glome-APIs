@@ -2325,7 +2325,7 @@ app.post("/createAppointment", (req, res, next) => {
   const userId = req.body.userId;
   const start = req.body.start;
   const end = req.body.end;
-  const contactEmail = req.body.contactEmail;
+  const contactEmails = req.body.contactEmails;
   const subject = req.body.subject;
   const note = req.body.note;
   const location = req.body.location;
@@ -2393,6 +2393,11 @@ app.post("/createAppointment", (req, res, next) => {
 
       const calendar = google.calendar({version: 'v3', auth: oauth2Client});
 
+        function createEmailObj(contactEmail) {
+            return {'email': contactEmail};
+        }
+        let contactEmailsObj = contactEmails.map(createEmailObj);
+
         var event = {
           'summary': subject,
           'location': location,
@@ -2400,9 +2405,7 @@ app.post("/createAppointment", (req, res, next) => {
           'start': start,
           'end': end,
           'recurrence': frequency,
-          'attendees': [
-            {'email': contactEmail},
-          ],
+          'attendees': contactEmailsObj,
           'reminders': {
             'useDefault': true,
           },
@@ -2474,7 +2477,7 @@ app.post("/editAppointment", (req, res, next) => {
   const eventId = req.body.eventId;
   const newStart = req.body.newStart;
   const newEnd = req.body.newEnd;
-  const newContactEmail = req.body.newContactEmail;
+  const newContactEmails = req.body.newContactEmails;
   const newSubject = req.body.newSubject;
   const newNote = req.body.newNote;
   const newLocation = req.body.newLocation;
@@ -2552,10 +2555,12 @@ app.post("/editAppointment", (req, res, next) => {
         if (newEnd != null) {
           event.end = newEnd;
         }
-        if (newContactEmail != null) {
-          event.attendees = [
-            {'email': newContactEmail},
-          ];
+        if (newContactEmails != null) {
+          function createEmailObj(contactEmail) {
+            return {'email': contactEmail};
+        }
+        let contactEmailsObj = newContactEmails.map(createEmailObj);
+          event.attendees = contactEmailsObj;
         }
         if (newSubject != null) {
           event.summary = newSubject;
