@@ -2117,11 +2117,11 @@ var GOOGLE_CLIENT_ID = '';
 var GOOGLE_CLIENT_SECRET = '';
 var oauth2Client;
 
-const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
-const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
+// const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
+// const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
 
-// const GOOGLE_AUTH = "http://localhost:8000/auth/google/"
-// const GOOGLE_AUTH_CALLBACK = "http://localhost:8000/auth/google/callback"
+const GOOGLE_AUTH = "http://localhost:8000/auth/google/"
+const GOOGLE_AUTH_CALLBACK = "http://localhost:8000/auth/google/callback"
 
 
 rootRef.ref().child("mail/").get().then((snapshot) => {
@@ -2158,6 +2158,9 @@ rootRef.ref().child("mail/").get().then((snapshot) => {
                     const ref = rootRef.ref("users/" + userId);
                     ref.get().then((snapshot) => {
                       if (snapshot.exists()) {
+                        if (refreshToken == null) {
+                          refreshToken = '';
+                        }
                         var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
                         ref.update(updates, (error) => {
                           if (error) {
@@ -2196,10 +2199,11 @@ app.get("/getAppointments", (req, res, next) => {
 
   const userId = req.query.userId;
 
-  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+  const ref = rootRef.ref("users/" + userId);
+
+  ref.get().then((snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
-
       if ("calendar" in data) {
         const accessToken = data["calendar"]["accessToken"];
         const refreshToken = data["calendar"]["refreshToken"];
@@ -2209,31 +2213,12 @@ app.get("/getAppointments", (req, res, next) => {
           refresh_token: refreshToken
         });
       } else if (data["email"] in calendarTokens) {
-            var query = firebase.database().ref("users");
-            query.once("value")
-            .then(function(snapshot) {
-              snapshot.forEach(function(childSnapshot) {
-                var key = childSnapshot.key;
-                var data2 = childSnapshot.val();
-
-                if (data["email"] == data2["email"]) {
-                  var userId = data["id"];
-                    const ref = rootRef.ref("users/" + userId);
-                    ref.get().then((snapshot) => {
-                      if (snapshot.exists()) {
-                        var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
-                        ref.update(updates, (error) => {
-                          if (error) {
-                            console.log(error);
-                          } 
-                      });
-                    }
-                  });
-                  return;
-                } 
-
-              });
-          });
+          var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
+            ref.update(updates, (error) => {
+              if (error) {
+                console.log(error);
+              } 
+            });
 
         const accessToken = calendarTokens[data["email"]]["accessToken"];
         const refreshToken = calendarTokens[data["email"]]["refreshToken"];
@@ -2331,7 +2316,9 @@ app.post("/createAppointment", (req, res, next) => {
   const location = req.body.location;
   const frequency = req.body.frequency;
 
-  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+  const ref = rootRef.ref("users/" + userId);
+
+  ref.get().then((snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
 
@@ -2344,31 +2331,12 @@ app.post("/createAppointment", (req, res, next) => {
           refresh_token: refreshToken
         });
       } else if (data["email"] in calendarTokens) {
-            var query = firebase.database().ref("users");
-            query.once("value")
-            .then(function(snapshot) {
-              snapshot.forEach(function(childSnapshot) {
-                var key = childSnapshot.key;
-                var data2 = childSnapshot.val();
-
-                if (data["email"] == data2["email"]) {
-                  var userId = data["id"];
-                    const ref = rootRef.ref("users/" + userId);
-                    ref.get().then((snapshot) => {
-                      if (snapshot.exists()) {
-                        var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
-                        ref.update(updates, (error) => {
-                          if (error) {
-                            console.log(error);
-                          } 
-                      });
-                    }
-                  });
-                  return;
-                } 
-
-              });
-          });
+          var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
+            ref.update(updates, (error) => {
+              if (error) {
+                console.log(error);
+              } 
+            });
 
         const accessToken = calendarTokens[data["email"]]["accessToken"];
         const refreshToken = calendarTokens[data["email"]]["refreshToken"];
@@ -2483,7 +2451,9 @@ app.post("/editAppointment", (req, res, next) => {
   const newLocation = req.body.newLocation;
   const newFrequency = req.body.newFrequency;
 
-  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+  const ref = rootRef.ref("users/" + userId);
+
+  ref.get().then((snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
 
@@ -2496,31 +2466,12 @@ app.post("/editAppointment", (req, res, next) => {
           refresh_token: refreshToken
         });
       } else if (data["email"] in calendarTokens) {
-            var query = firebase.database().ref("users");
-            query.once("value")
-            .then(function(snapshot) {
-              snapshot.forEach(function(childSnapshot) {
-                var key = childSnapshot.key;
-                var data2 = childSnapshot.val();
-
-                if (data["email"] == data2["email"]) {
-                  var userId = data["id"];
-                    const ref = rootRef.ref("users/" + userId);
-                    ref.get().then((snapshot) => {
-                      if (snapshot.exists()) {
-                        var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
-                        ref.update(updates, (error) => {
-                          if (error) {
-                            console.log(error);
-                          } 
-                      });
-                    }
-                  });
-                  return;
-                } 
-
-              });
-          });
+          var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
+            ref.update(updates, (error) => {
+              if (error) {
+                console.log(error);
+              } 
+            });
 
         const accessToken = calendarTokens[data["email"]]["accessToken"];
         const refreshToken = calendarTokens[data["email"]]["refreshToken"];
