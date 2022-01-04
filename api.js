@@ -2117,11 +2117,11 @@ var GOOGLE_CLIENT_ID = '';
 var GOOGLE_CLIENT_SECRET = '';
 var oauth2Client;
 
-// const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
-// const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
+const GOOGLE_AUTH = "https://glome-api.herokuapp.com/auth/google/"
+const GOOGLE_AUTH_CALLBACK = "https://glome-api.herokuapp.com/auth/google/callback"
 
-const GOOGLE_AUTH = "http://localhost:8000/auth/google/"
-const GOOGLE_AUTH_CALLBACK = "http://localhost:8000/auth/google/callback"
+// const GOOGLE_AUTH = "http://localhost:8000/auth/google/"
+// const GOOGLE_AUTH_CALLBACK = "http://localhost:8000/auth/google/callback"
 
 
 rootRef.ref().child("mail/").get().then((snapshot) => {
