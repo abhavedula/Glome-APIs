@@ -2083,8 +2083,6 @@ const passport = require('passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
-var calendarTokens = {};
-
 app.get('/success', (req, res) => {
   res.statusCode = 200;
     res.send({
@@ -2144,7 +2142,6 @@ rootRef.ref().child("mail/").get().then((snapshot) => {
         },
         function(accessToken, refreshToken, profile, done) {
             var email = profile["emails"][0]["value"];
-            calendarTokens[email] = {"accessToken": accessToken, "refreshToken": refreshToken};
 
             var query = firebase.database().ref("users");
             query.once("value")
@@ -2212,22 +2209,6 @@ app.get("/getAppointments", (req, res, next) => {
           access_token: accessToken,
           refresh_token: refreshToken
         });
-      } else if (data["email"] in calendarTokens) {
-          var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
-            ref.update(updates, (error) => {
-              if (error) {
-                console.log(error);
-              } 
-            });
-
-        const accessToken = calendarTokens[data["email"]]["accessToken"];
-        const refreshToken = calendarTokens[data["email"]]["refreshToken"];
-        
-        oauth2Client.setCredentials({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-
       } else {
         // OAuth prompt
         res.statusCode = 200;
@@ -2330,22 +2311,6 @@ app.post("/createAppointment", (req, res, next) => {
           access_token: accessToken,
           refresh_token: refreshToken
         });
-      } else if (data["email"] in calendarTokens) {
-          var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
-            ref.update(updates, (error) => {
-              if (error) {
-                console.log(error);
-              } 
-            });
-
-        const accessToken = calendarTokens[data["email"]]["accessToken"];
-        const refreshToken = calendarTokens[data["email"]]["refreshToken"];
-        
-        oauth2Client.setCredentials({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-
       } else {
         // OAuth prompt
         res.statusCode = 200;
@@ -2465,22 +2430,6 @@ app.post("/editAppointment", (req, res, next) => {
           access_token: accessToken,
           refresh_token: refreshToken
         });
-      } else if (data["email"] in calendarTokens) {
-          var updates = {"calendar": {"accessToken": accessToken, "refreshToken": refreshToken}};
-            ref.update(updates, (error) => {
-              if (error) {
-                console.log(error);
-              } 
-            });
-
-        const accessToken = calendarTokens[data["email"]]["accessToken"];
-        const refreshToken = calendarTokens[data["email"]]["refreshToken"];
-        
-        oauth2Client.setCredentials({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-       
       } else {
         // OAuth prompt
         res.statusCode = 200;
