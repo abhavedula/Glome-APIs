@@ -2241,9 +2241,10 @@ app.get("/getAppointments", (req, res, next) => {
           } else {
             const items = response.data.items;
             var events = [];
+
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
-              events.push({
+              var calEvent = {
                 id: item["id"],
                 subject: item["summary"],
                 note: item["description"],
@@ -2251,9 +2252,23 @@ app.get("/getAppointments", (req, res, next) => {
                 start: item["start"],
                 end: item["end"],
                 link: item["htmlLink"],
-                attendees: item["attendees"],
+                attendees: [],
                 frequency: item["recurrence"]
-              });
+              };
+
+              if ("contacts" in data) {
+                const contacts =  Object.values(data["contacts"]);
+                const attendees = item["attendees"];
+                for (var j = 0; j < attendees.length; j++) {
+                  for (var k = 0; k < contacts.length; k++) {
+                    if (attendees[j]["email"] == contacts[k]["email"]) {
+                      calEvent["attendees"].push(contacts[k]);
+                      break;
+                    }
+                  }
+                }
+              }
+              events.push(calEvent);
             } 
             res.statusCode = 200;
             res.send({
