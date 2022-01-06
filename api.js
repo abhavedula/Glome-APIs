@@ -2230,14 +2230,24 @@ app.get("/getAppointments", (req, res, next) => {
           orderBy: 'startTime',
         }, (err, response) => {
           if (err) {
+            const errorMessage = err["errors"][0]["message"];
             // OAuth prompt
-            res.statusCode = 200;
-            res.send({
-              success: false,
-              responseCode: 200,
-              message: "You need to give Glome access to your Google calendar to use this feature.",
-              data: {"link": GOOGLE_AUTH}
-            });
+            res.statusCode = 400;
+            if (errorMessage == "Invalid Credentials") {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "You need to give Glome access to your Google calendar to use this feature.",
+                data: {"link": GOOGLE_AUTH}
+              });
+            } else {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: errorMessage,
+                data: {}
+              });
+            }
           } else {
             const items = response.data.items;
             var events = [];
@@ -2365,14 +2375,24 @@ app.post("/createAppointment", (req, res, next) => {
           resource: event,
         }, function(err, event) {
           if (err) {
+            const errorMessage = err["errors"][0]["message"];
             // OAuth prompt
-            res.statusCode = 200;
-            res.send({
-              success: false,
-              responseCode: 200,
-              message: "You need to give Glome access to your Google calendar to use this feature.",
-              data: {"link": GOOGLE_AUTH}
-            });
+            res.statusCode = 400;
+            if (errorMessage == "Invalid Credentials") {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "You need to give Glome access to your Google calendar to use this feature.",
+                data: {"link": GOOGLE_AUTH}
+              });
+            } else {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: errorMessage,
+                data: {}
+              });
+            }
           } else {
             var item = event["data"];
             res.statusCode = 200;
@@ -2497,14 +2517,24 @@ app.post("/editAppointment", (req, res, next) => {
           resource: event,
         }, function(err, event) {
           if (err) {
+            const errorMessage = err["errors"][0]["message"];
             // OAuth prompt
-            res.statusCode = 200;
-            res.send({
-              success: false,
-              responseCode: 200,
-              message: "You need to give Glome access to your Google calendar to use this feature.",
-              data: {"link": GOOGLE_AUTH}
-            });
+            res.statusCode = 400;
+            if (errorMessage == "Invalid Credentials") {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: "You need to give Glome access to your Google calendar to use this feature.",
+                data: {"link": GOOGLE_AUTH}
+              });
+            } else {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: errorMessage,
+                data: {}
+              });
+            }
           } else {
             res.statusCode = 200;
             var item = event["data"];
