@@ -2230,7 +2230,10 @@ app.get("/getAppointments", (req, res, next) => {
           orderBy: 'startTime',
         }, (err, response) => {
           if (err) {
-            const errorMessage = err["errors"][0]["message"];
+            let errorMessage = "Error getting appointments"
+            if ("errors" in err) {
+              errorMessage = err["errors"][0]["message"];
+            }
             // OAuth prompt
             if (errorMessage == "Invalid Credentials") {
               res.send({
@@ -2244,7 +2247,7 @@ app.get("/getAppointments", (req, res, next) => {
                 success: false,
                 responseCode: 400,
                 message: errorMessage,
-                data: {}
+                data: {"link": GOOGLE_AUTH}
               });
             }
           } else {
@@ -2374,7 +2377,10 @@ app.post("/createAppointment", (req, res, next) => {
           resource: event,
         }, function(err, event) {
           if (err) {
-            const errorMessage = err["errors"][0]["message"];
+            let errorMessage = "Error getting appointments"
+            if ("errors" in err) {
+              errorMessage = err["errors"][0]["message"];
+            }
             // OAuth prompt
             if (errorMessage == "Invalid Credentials") {
               res.send({
@@ -2388,7 +2394,7 @@ app.post("/createAppointment", (req, res, next) => {
                 success: false,
                 responseCode: 400,
                 message: errorMessage,
-                data: {}
+                data: {"link": GOOGLE_AUTH}
               });
             }
           } else {
