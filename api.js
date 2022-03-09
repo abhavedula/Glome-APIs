@@ -824,33 +824,44 @@ app.post("/updateUserProfile", (req, res, next) => {
               action: 'read',
               expires: '03-09-2491'
             }).then(signedUrls => {
-              rootRef.ref().child("users/" + userId).get().then((snapshot) => {
-                if (snapshot.exists()) {
-                  data = snapshot.val();
-                  res.statusCode = 200;
+              res.send({
+                    success: true,
+                    responseCode: 200,
+                    message: 'User profile updated successfully',
+                    data: { updated_user_profile_details: {
+                      id: userId,
+                      firstName: newFirstName || 'not updated',
+                      lastName: newLastName || 'not updated',
+                      email: newEmail || 'not updated',
+                      agencyName: newAgencyName || 'not updated',
+                      phone: newPhone || 'not updated',
+                      countryCode: newCountryCode || 'not updated',
+                      profilePic: newProfilePic  || 'not updated'
+                    }}
+                  });
+            });
+          });
+        } else {
+          res.statusCode = 200;
                   res.send({
                     success: true,
                     responseCode: 200,
                     message: 'User profile updated successfully',
-                    data: { user_profile_details: {
-                      id: data["id"],
-                      firstName: data["firstName"],
-                      lastName: data["lastName"],
-                      email: data["email"],
-                      agencyName: data["agencyName"],
-                      phone: data["phone"],
-                      countryCode: data["countryCode"],
-                      profilePic: signedUrls[0]
+                    data: { updated_user_profile_details: {
+                      id: userId,
+                      firstName: newFirstName || 'not updated',
+                      lastName: newLastName || 'not updated',
+                      email: newEmail || 'not updated',
+                      agencyName: newAgencyName || 'not updated',
+                      phone: newPhone || 'not updated',
+                      countryCode: newCountryCode || 'not updated',
+                      profilePic: newProfilePic || 'not updated'
                     }}
                   });
-                }
-              });
-            });
-          });
-}
-}
-});
-}
+        }
+      }
+    });
+  }
 })
 });
 
@@ -2582,6 +2593,152 @@ app.post("/editAppointment", (req, res, next) => {
 
 }); 
 
+app.get("/getChats", (req, res, next) => {
+  const userId = req.query.userId;
+
+  rootRef.ref().get().then((snapshot) => {
+    if (snapshot.exists()) {
+      rootData = snapshot.val();
+      var error = false;
+
+      if ("users" in rootData) {
+        if (userId in rootData["users"]) {
+          var data = rootData["users"][userId];
+          var userPhone =  data["countryCode"] + data["phone"];
+          var contacts = Object.values(data["contacts"]);
+
+         const accountSid = rootData["twilio"]["accountSid"];
+         const authToken = rootData["twilio"]["authToken"];
+         const client = require('twilio')(accountSid, authToken); 
+         
+         var chatsToReturn = [];
+
+         client.messages.list()
+         .then(messages => {
+          messages.forEach(m => {
+            var otherNumber = null;
+            if (m["to"] == userPhone) {
+              otherNumber = m['from'];
+            } else if (m["from"] == userPhone) {
+              otherNumber = m["to"];
+            }
+
+            if (otherNumber == null || otherNumber in chatsToReturn) {
+              // skip
+            } else {
+              var otherContact = contacts.filter(contact => {
+                return contact["countryCode"] + contact["phone"] == otherNumber;
+              })
+              contact = {};
+
+              var lastTimeChatViewed = null;
+              if (otherContact.length > 0) {
+                contact["id"] = otherContact[0]["id"];
+                contact["firstName"] = otherContact[0]["firstName"];
+                contact["lastName"] = otherContact[0]["lastName"];
+                lastTimeChatViewed = otherContact[0]["lastTimeChatViewed"] || 0;
+              }
+
+              // date and last seen logic
+              var timestamp = (new Date(m["dateSent"])).getTime();
+
+              chatsToReturn[otherNumber] = {
+                "contact": contact,
+                "body": m["body"],
+                "from": m["from"],
+                "to": m["to"],
+                "date": m["dateSent"],
+                "direction": m["direction"],
+                "seen": m["direction"] == "inbound" ? lastTimeChatViewed > timestamp : true
+              };
+            }              
+            
+          });
+
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Chats found",
+            data: {chats: Object.values(chatsToReturn)}
+          });
+        });
+
+       }
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+
+  } else {
+    res.statusCode = 200;
+    res.send({
+      success: false,
+      responseCode: 200,
+      message: "Data could not be found",
+      data: {}
+    });
+  }
+}).catch((error) => {
+  res.statusCode = 400;
+  res.send({
+    success: false,
+    responseCode: 400,
+    message: "Chats could not be found: " + error,
+    data: {}
+  });
+});
+
+});
+
+app.post("/updateLastSeen", (req, res, next) => {
+  const userId = req.body.userId;
+  const contactId = req.body.contactId;
+
+  const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
+  ref.get().then((snapshot) => {
+    if (!snapshot.exists()) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: "User or contact does not exist",
+        data: {}
+      });
+    } else {
+      var date = Date.now();
+
+      const updates = {"lastTimeChatViewed": date};
+      
+      ref.update(updates, (error) => {
+        if (error) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Last time chat viewed not updated: " + error,
+            data: {}
+          });
+        } else {
+          res.statusCode = 200;
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Last time chat viewed updated to: " + date,
+            data: {}
+          });
+        }
+      });
+    }
+  });
+});
+
+      
 
 
 //Server
