@@ -343,9 +343,11 @@ app.get("/getGroups", (req, res, next) => {
           var members = Object.values(groups[i]["members"]);  
           groups[i]["members"] = [];
           for (var j = 0; j < members.length; j++) {
-           var m = data["contacts"][members[j]];
-           m["groups"] = Object.values(m["groups"]);
-           groups[i]["members"].push(m);
+          if (members[j] in data["contacts"]) {
+             var m = data["contacts"][members[j]];
+             m["groups"] = Object.values(m["groups"]);
+             groups[i]["members"].push(m);
+           }
          }
        } 
      }
@@ -2282,11 +2284,13 @@ app.get("/getAppointments", (req, res, next) => {
               if ("contacts" in data) {
                 const contacts =  Object.values(data["contacts"]);
                 const attendees = item["attendees"];
-                for (var j = 0; j < attendees.length; j++) {
-                  for (var k = 0; k < contacts.length; k++) {
-                    if (attendees[j]["email"] == contacts[k]["email"]) {
-                      calEvent["attendees"].push(contacts[k]);
-                      break;
+                if (attendees != null) {
+                  for (var j = 0; j < attendees.length; j++) {
+                    for (var k = 0; k < contacts.length; k++) {
+                      if (attendees[j]["email"] == contacts[k]["email"]) {
+                        calEvent["attendees"].push(contacts[k]);
+                        break;
+                      }
                     }
                   }
                 }
@@ -2737,6 +2741,222 @@ app.post("/updateLastSeen", (req, res, next) => {
     }
   });
 });
+
+app.post("/deleteMapPin", (req, res, next) => {
+  const userId = req.body.userId;
+  const pinId = req.body.pinId;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (snapshot.exists()) {
+      res.statusCode = 200;
+      data = snapshot.val();
+
+      var agencyName = data["agencyName"];
+
+      rootRef.ref().child("mapPins/" + agencyName + "/" + pinId).get().then((snapshot) => {
+        if (!snapshot.exists()) {
+          res.statusCode = 400;
+          res.send({
+            success: false,
+            responseCode: 400,
+            message: "Pin does not exist",
+            data: {}
+          });
+        } else {
+          const ref = rootRef.ref("mapPins/" + agencyName + "/" + pinId);
+          ref.remove();
+          res.send({
+            success: true,
+            responseCode: 200,
+            message: "Pin successfully deleted",
+            data: {}
+          });
+        }
+      })
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Pin could not be deleted: " + error,
+      data: {}
+    });
+  });
+});
+
+app.post("/deleteContact", (req, res, next) => {
+  const userId = req.body.userId;
+  const contactId = req.body.contactId;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: "User does not exist",
+        data: {}
+      });
+    } else {
+      const ref = rootRef.ref("users/" + userId + "/contacts/" + contactId);
+      ref.remove();
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: "Contact successfully deleted",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Contact could not be deleted: " + error,
+      data: {}
+    });
+  });
+});
+
+app.post("/deleteGroup", (req, res, next) => {
+  const userId = req.body.userId;
+  const groupId = req.body.groupId;
+
+  rootRef.ref().child("users/" + userId).get().then((snapshot) => {
+    if (!snapshot.exists()) {
+      res.statusCode = 400;
+      res.send({
+        success: false,
+        responseCode: 400,
+        message: "User does not exist",
+        data: {}
+      });
+    } else {
+      const ref = rootRef.ref("users/" + userId + "/groups/" + groupId);
+      ref.remove();
+      res.send({
+        success: true,
+        responseCode: 200,
+        message: "Group successfully deleted",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Group could not be deleted: " + error,
+      data: {}
+    });
+  });
+});
+
+app.post("/deleteAppointment", (req, res, next) => {
+  const {google} = require('googleapis');
+
+  const userId = req.body.userId;
+  const eventId = req.body.eventId;
+
+  const ref = rootRef.ref("users/" + userId);
+
+  ref.get().then((snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+
+      if ("calendar" in data) {
+        const accessToken = data["calendar"]["accessToken"];
+        const refreshToken = data["calendar"]["refreshToken"];
+        
+        oauth2Client.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+      } else {
+        // OAuth prompt
+        res.statusCode = 200;
+        res.send({
+          success: false,
+          responseCode: 200,
+          message: "You need to give Glome access to your Google calendar to use this feature.",
+          data: {"link": GOOGLE_AUTH}
+        });
+        return;
+      }
+
+       const calendar = google.calendar({version: 'v3', auth: oauth2Client});
+        var event = calendar.events.get({
+          auth: oauth2Client,
+          calendarId: data["email"], 
+          eventId: eventId
+        });
+
+    
+        calendar.events.delete({
+          auth: oauth2Client,
+          calendarId: data["email"],
+          eventId: eventId,
+          resource: event,
+        }, function(err, event) {
+          if (err) {
+            const errorMessage = err["errors"][0]["message"];
+            // OAuth prompt
+            if (errorMessage == "Invalid Credentials") {
+              res.send({
+                success: false,
+                responseCode: 200,
+                message: "You need to give Glome access to your Google calendar to use this feature.",
+                data: {"link": GOOGLE_AUTH}
+              });
+            } else {
+              res.send({
+                success: false,
+                responseCode: 400,
+                message: errorMessage,
+                data: {}
+              });
+            }
+          } else {
+            res.statusCode = 200;
+            var item = event["data"];
+            res.send({
+              success: true,
+              responseCode: 200,
+              message: "Appointment was deleted successfully",
+              data: {}
+            });
+          }
+        });
+    } else {
+      res.statusCode = 200;
+      res.send({
+        success: false,
+        responseCode: 200,
+        message: "User does not exist",
+        data: {}
+      });
+    }
+  }).catch((error) => {
+    res.statusCode = 400;
+    res.send({
+      success: false,
+      responseCode: 400,
+      message: "Calendar events could not be found: " + error,
+      data: {}
+    });
+  });
+
+}); 
+
 
       
 
