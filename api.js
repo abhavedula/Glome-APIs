@@ -762,14 +762,39 @@ res.send({
 });
 
 app.post("/updateUserProfile", (req, res, next) => {
-  const userId = req.body.userId;
-  const newFirstName = req.body.newFirstName;
-  const newLastName = req.body.newLastName;
-  const newAgencyName = req.body.newAgencyName;
-  const newEmail = req.body.newEmail;
-  const newPhone = req.body.newPhone;
-  const newCountryCode = req.body.newCountryCode;
-  const newProfilePic = req.body.newProfilePic;
+  var parts = req.body["_parts"]; 
+  var updates = {};
+  var userId = null;
+  var newProfilePic = null;
+
+  for (var i = 0; i < parts.length; i++) {
+    var edit = parts[i];
+    if (edit[0] == "userId") {
+      userId = edit[1];
+    } else if (edit[0] == "newProfilePic") {
+      newProfilePic = edit[1];
+    } else {
+      if (edit[1] != null) {
+        var param = null;
+        if (edit[0] == "newFirstName") {
+          param = "firstName";
+        } else if (edit[0] == "newLastName") {
+          param = "lastName";
+        } else if (edit[0] == "newAgencyName") {
+          param = "agencyName";
+        } else if (edit[0] == "newEmail") {
+          param = "email";
+        } else if (edit[0] == "newPhone") {
+          param = "phone";
+        } else if (edit[0] == "newCountryCode") {
+          param = "countryCode";
+        } 
+        if (param != null) {
+          updates[param] = edit[1];
+        }
+      }
+    }
+  }
 
   const ref = rootRef.ref("users/" + userId);
   ref.get().then((snapshot) => {
@@ -782,26 +807,6 @@ app.post("/updateUserProfile", (req, res, next) => {
         data: {}
       });
     } else {
-      const updates = {};
-      if (newFirstName != null) {
-        updates["firstName"] = newFirstName;
-      }
-      if (newLastName != null) {
-        updates["lastName"] = newLastName;
-      }
-      if (newPhone != null) {
-        updates["phone"] = newPhone;
-      }
-      if (newCountryCode != null) {
-        updates["countryCode"] = newCountryCode;
-      }
-      if (newEmail != null) {
-        updates["email"] = newEmail;
-      }
-      if (newAgencyName != null) {
-        updates["agencyName"] = newAgencyName;
-      }
-      
 
       ref.update(updates, (error) => {
         if (error) {
@@ -832,13 +837,13 @@ app.post("/updateUserProfile", (req, res, next) => {
                     message: 'User profile updated successfully',
                     data: { updated_user_profile_details: {
                       id: userId,
-                      firstName: newFirstName || 'not updated',
-                      lastName: newLastName || 'not updated',
-                      email: newEmail || 'not updated',
-                      agencyName: newAgencyName || 'not updated',
-                      phone: newPhone || 'not updated',
-                      countryCode: newCountryCode || 'not updated',
-                      profilePic: newProfilePic  || 'not updated'
+                      firstName: updates["firstName"] || 'not updated',
+                      lastName: updates["lastName"] || 'not updated',
+                      email: updates["email"] || 'not updated',
+                      agencyName: updates["AgencyName"] || 'not updated',
+                      phone: updates["phone"] || 'not updated',
+                      countryCode: updates["countryCode"] || 'not updated',
+                      profilePic: updates["profilePic"]  || 'not updated'
                     }}
                   });
             });
@@ -851,13 +856,13 @@ app.post("/updateUserProfile", (req, res, next) => {
                     message: 'User profile updated successfully',
                     data: { updated_user_profile_details: {
                       id: userId,
-                      firstName: newFirstName || 'not updated',
-                      lastName: newLastName || 'not updated',
-                      email: newEmail || 'not updated',
-                      agencyName: newAgencyName || 'not updated',
-                      phone: newPhone || 'not updated',
-                      countryCode: newCountryCode || 'not updated',
-                      profilePic: newProfilePic || 'not updated'
+                      firstName: updates["firstName"] || 'not updated',
+                      lastName: updates["lastName"] || 'not updated',
+                      email: updates["email"] || 'not updated',
+                      agencyName: updates["AgencyName"] || 'not updated',
+                      phone: updates["phone"] || 'not updated',
+                      countryCode: updates["countryCode"] || 'not updated',
+                      profilePic: updates["profilePic"]  || 'not updated'
                     }}
                   });
         }
