@@ -2618,7 +2618,10 @@ app.get("/getChats", (req, res, next) => {
         if (userId in rootData["users"]) {
           var data = rootData["users"][userId];
           var userPhone =  data["countryCode"] + data["phone"];
-          var contacts = Object.values(data["contacts"]);
+          var contacts = [];
+          if (data["contacts"] != null)  {
+            contacts = Object.values(data["contacts"]);
+          }
 
          const accountSid = rootData["twilio"]["accountSid"];
          const authToken = rootData["twilio"]["authToken"];
